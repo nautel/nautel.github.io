@@ -15,16 +15,15 @@ description              : &description "personal description"
 url                      : https://nautel.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
 repository               : "academicpages/academicpages.github.io"
-
 # Site Author - The following control what appear as part of the author content on the side bar.
 #               If a field is blank the icon and link will not appear, otherwise it will be shown.
 #               Additional customization can be done by editing /_includes/author-profile.html
 author:
   # Biographic information
-  avatar           : "profile_pic_01.jpg"
+  avatar           : "IMG_0844.jpg"
   name             : "Lê Tuân"
   pronouns         : # example: "she/her"  
-  bio              : "Anomaly Detection & Computer Vision"
+  bio              : "AI/ML application & Computer Vision"
   location         : "Paris, France"
   employer         : "UTC"
   uri              : # URL
@@ -34,7 +33,7 @@ author:
   arxiv            : # URL - Update with the correct link to your profile
   googlescholar    : "https://scholar.google.fr/citations?hl=vi&user=py3sPfwAAAAJ"
   impactstory      : # URL
-  orcid            : "https://orcid.org/0000-0001-9998-1045"
+  orcid            : #"https://orcid.org/0000-0001-9998-1045"
   semantic         : # URL
   pubmed           : #"https://www.ncbi.nlm.nih.gov/pubmed/?term=john+snow"
   researchgate     : # URL
@@ -57,7 +56,7 @@ author:
   keybase          : # Username
   instagram        : # Username
   lastfm           : # Username
-  linkedin         : nautel
+  linkedin         : # nautel
   mastodon         : # URL
   medium           : # URL
   pinterest        : # Username
@@ -65,7 +64,7 @@ author:
   steam            : # Username
   telegram         : # URL
   tumblr           : # Username
-  twitter          : nnautel
+  twitter          : # nnautel
   vine             : # Username
   weibo            : # Username
   wikipedia        : # Username
