@@ -9,11 +9,11 @@ main:
   - title: "Research"
     url: https://scholar.google.fr/citations?hl=vi&user=py3sPfwAAAAJ
 
-#  - title: "Blog"
-#    url: /year-archive/
+  - title: "Talks"
+    url: /talks/
 
-#  - title: "Talks"
-#    url: /talks/    
+#  - title: "Blog"
+#    url: /year-archive/    
 
 #  - title: "Teaching"
 #    url: /teaching/    
