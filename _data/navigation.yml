@@ -4,7 +4,7 @@ main:
     url: /news/
 
   - title: "CV"
-    url: /files/resume (english).pdf
+    url: /files/cv.html
 
   - title: "Research"
     url: https://scholar.google.fr/citations?hl=vi&user=py3sPfwAAAAJ
