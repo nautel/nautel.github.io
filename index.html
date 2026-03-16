@@ -48,19 +48,32 @@
           <!-- Research -->
           <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
             <tr>
-              <td style="padding:20px;width:100%;vertical-align:middle">
+              <td style="padding:16px;width:100%;vertical-align:middle">
                 <h2>Research</h2>
               </td>
             </tr>
           </tbody></table>
+          <table style="width:100%;border:0px;border-spacing:0px 10px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
 
-          <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
-            <!-- MSAF -->
-            <tr>
-              <td style="padding:20px;width:25%;vertical-align:middle">
-                <a href="msaf.html">
-                  <img src="images/msaf_thumb.gif" alt="MSAF demo" style="width:100%;max-width:280px;border-radius:8px;">
-                </a>
+            <tr onmouseout="msaf_stop()" onmouseover="msaf_start()">
+              <td style="padding:16px;width:25%;vertical-align:middle">
+                <div class="one">
+                  <div class="two" id='msaf_image'>
+                    <video width=160 height=160 muted autoplay loop>
+                      <source src="images/msaf_hover.mp4" type="video/mp4">
+                    </video>
+                  </div>
+                  <img src='images/msaf_teaser.jpg' width="160">
+                </div>
+                <script type="text/javascript">
+                  function msaf_start() {
+                    document.getElementById('msaf_image').style.opacity = "1";
+                  }
+                  function msaf_stop() {
+                    document.getElementById('msaf_image').style.opacity = "0";
+                  }
+                  msaf_stop()
+                </script>
               </td>
               <td style="padding:20px;width:75%;vertical-align:middle">
                 <a href="msaf.html">
@@ -71,15 +84,17 @@
                 <a href="https://www.hds.utc.fr/~moreajul/dokuwiki/">Julien Moreau</a>,
                 <a href="https://liris.cnrs.fr/page-membre/franck-davoine">Franck Davoine</a>
                 <br>
-                <em>Under review</em>, 2026
+                <em>ECCV</em>, 2026
                 <br>
                 <a href="msaf.html">project page</a> /
                 <a href="https://github.com/nautel/MSAF">code</a>
+                <p></p>
                 <p>
-                  Annotation-free 3D object detection combining open-vocabulary 2D detection with LiDAR point cloud fitting. Achieves 31.4% mAP on nuScenes, 72&times; faster than optimization baselines.
+                  Annotation-free 3D object detection that generates pseudo-labels through closed-form geometric fitting of LiDAR points in SAM masks. 31.4% mAP on nuScenes, 72&times; faster than optimization baselines.
                 </p>
               </td>
             </tr>
+
           </tbody></table>
 
           <!-- Footer -->
