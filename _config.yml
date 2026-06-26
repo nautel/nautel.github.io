@@ -1,0 +1,20 @@
+title: "Lê Tuân"
+author: "Lê Tuân"
+description: "Personal website of Lê Tuân — postdoctoral researcher."
+url: "https://nautel.github.io"
+baseurl: ""
+
+future: true   # build posts dated today even if the clock/timezone says "future"
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Build settings
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - backup.html
+  - README.md
+  - vendor

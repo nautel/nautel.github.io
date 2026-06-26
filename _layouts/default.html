@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html lang="{{ page.html_lang | default: 'en' }}">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>{% if page.title %}{{ page.title }} &mdash; {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
+    <meta name="author" content="{{ site.author }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="{{ '/images/favicon/favicon.ico' | relative_url }}" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="{{ '/stylesheet.css' | relative_url }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+  </head>
+
+  <body data-copy="{{ page.copy_label | default: 'Copy' }}" data-copied="{{ page.copied_label | default: 'Copied' }}">
+
+    {{ content }}
+
+    <script>
+      document.querySelectorAll('pre').forEach(function (pre) {
+        var btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.type = 'button';
+        var labelCopy = document.body.dataset.copy || 'Copy';
+        var labelCopied = document.body.dataset.copied || 'Copied';
+        btn.textContent = labelCopy;
+        btn.addEventListener('click', function () {
+          var code = pre.querySelector('code');
+          var text = code ? code.innerText : pre.innerText;
+          navigator.clipboard.writeText(text).then(function () {
+            btn.textContent = labelCopied;
+            btn.classList.add('copied');
+            setTimeout(function () { btn.textContent = labelCopy; btn.classList.remove('copied'); }, 1500);
+          });
+        });
+        pre.appendChild(btn);
+      });
+    </script>
+  </body>
+</html>

@@ -140,3 +140,62 @@ span.highlight {
     display: inline-block;
     border-radius: 10px;
 }
+
+/* ============================================================
+   Blog / post styles (scoped to .blog so the home page keeps Lato)
+   ============================================================ */
+.blog, .blog p, .blog li, .blog td, .topnav, .posttitle, figcaption, .postmeta {
+  font-family: 'Noto Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+.blog pre, .blog code, .blog p code, .blog li code {
+  font-family: 'Source Code Pro', SFMono-Regular, Consolas, Menlo, monospace;
+}
+
+.blog { width:100%; max-width:800px; margin:0 auto; padding:0 16px; box-sizing:border-box; }
+
+.topnav { display:flex; justify-content:space-between; align-items:center;
+          padding:14px 0; border-bottom:1px solid #eee; margin-bottom:28px; }
+.topnav .brand { font-size:20px; font-weight:700; }
+.topnav .brand span { font-weight:400; }
+.topnav a { margin-left:18px; }
+.topnav .active { color:#333; font-weight:700; }
+
+.posttitle { font-size:30px; font-weight:700; margin:18px 0 4px 0; }
+.postmeta { color:#999; font-size:13px; margin-bottom:24px; }
+
+.blog h2 { font-size:24px; margin:34px 0 12px 0; padding-bottom:6px; border-bottom:1px solid #eee; font-weight:600; }
+.blog p, .blog li { font-size:15px; line-height:1.7; color:#222; text-align:justify; }
+.blog ul.toc { line-height:1.9; }
+
+figure { margin:22px 0; text-align:center; }
+figure img { max-width:100%; height:auto; border-radius:6px; }
+figcaption { color:#777; font-size:13px; margin-top:8px; }
+/* size helpers: <figure class="small"> ... ; caps the image width, stays responsive on mobile */
+figure.small  img { max-width:320px; }
+figure.medium img { max-width:480px; }
+figure.large  img { max-width:640px; }
+
+.blog pre, .blog .highlighter-rouge { position:relative; }
+.blog pre, .blog div.highlight { background:#f6f8fa; border:1px solid #e6e8eb; border-radius:6px; }
+.blog pre { padding:14px 16px; overflow-x:auto; font-size:13px; line-height:1.5; margin:18px 0; }
+.blog div.highlight pre { border:0; margin:0; }
+.blog pre code { background:none; padding:0; color:#24292f; }
+.blog p code, .blog li code { background:#f0f2f5; padding:1px 5px; border-radius:4px; font-size:13px; color:#c0341d; }
+
+.copy-btn { position:absolute; top:8px; right:8px; font-size:12px; padding:3px 10px;
+  border:1px solid #d0d7de; border-radius:5px; background:#fff; color:#555; cursor:pointer;
+  opacity:0; transition:opacity .15s; font-family:'Noto Sans',sans-serif; z-index:2; }
+.blog pre:hover .copy-btn, .blog .highlighter-rouge:hover .copy-btn, .copy-btn:focus { opacity:1; }
+.copy-btn.copied { color:#1a7f37; border-color:#1a7f37; }
+
+/* clean transform / matrix notation, e.g. <span class="m"><sup>A</sup>T<sub>B</sub></span> */
+.m { font-style:italic; white-space:nowrap; }
+.m sub, .m sup { font-style:normal; font-size:0.72em; }
+
+.legend { background:#f6f8fa; border:1px solid #e6e8eb; border-radius:6px; padding:6px 16px; margin:18px 0; }
+.legend p { margin:8px 0; }
+.legend dl { margin:0; }
+.legend dt { float:left; clear:left; width:120px; font-weight:600; }
+.legend dd { margin:0 0 6px 132px; }
+
+.footer { margin:48px 0 24px 0; color:#999; font-size:13px; text-align:center; border-top:1px solid #eee; padding-top:16px; }

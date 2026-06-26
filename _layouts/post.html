@@ -1,0 +1,17 @@
+---
+layout: default
+---
+<div class="blog">
+
+  {% include nav.html %}
+
+  <div class="posttitle">{{ page.title }}</div>
+  <div class="postmeta">{{ page.display_date }}</div>
+
+  {{ content }}
+
+  <div class="footer">
+    {{ page.footer_note }}
+  </div>
+
+</div>
