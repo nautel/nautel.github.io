@@ -209,6 +209,11 @@ Num inliers: 9
 
 Một cách kiểm tra trực quan là vẽ các đường epipolar. Một điểm ở ảnh này tương ứng với một đường thẳng 1D ở ảnh kia, và mọi đường epipolar hội tụ tại *epipole*. Hãy để ý vị trí epipole ở ảnh trái: đó chính là nơi camera trước sẽ nằm khi ảnh thứ hai được chụp. Dùng mỗi màu cho một correspondence, mọi điểm sẽ nằm trên đường epipolar của nó.
 
+<figure>
+  <img src="/images/VO/epilines.png" alt="Đường epipolar trên hai ảnh" style="width:100%">
+  <figcaption>Đường epipolar của 9 điểm inlier: mỗi điểm trên ảnh <b>t1</b> ứng với một đường thẳng trên ảnh <b>t2</b> (và ngược lại), cùng màu. Các điểm nằm đúng trên đường của mình, và các đường hội tụ về <em>epipole</em> — chính là vị trí camera của ảnh còn lại.</figcaption>
+</figure>
+
 ## Khôi phục chuyển động tương đối {#recover}
 
 Cuối cùng ta phân tích essential matrix ra rotation và translation. OpenCV dùng thuật toán 5-point bên trong:

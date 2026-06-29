@@ -207,6 +207,11 @@ Num inliers: 9
 
 A good sanity check is to draw the epipolar lines. A point in one image corresponds to a 1D line in the other, and all epipolar lines converge at the *epipole*. Notice where the epipole lands in the left image: it is exactly where the front-center camera will be when the second image is captured. Using one color per correspondence, every point should lie on its epipolar line.
 
+<figure>
+  <img src="/images/VO/epilines.png" alt="Epipolar lines on both images" style="width:100%">
+  <figcaption>Epipolar lines for the 9 inliers: each point in image <b>t1</b> maps to a line in image <b>t2</b> (and vice versa), in the same colour. The points lie on their lines, and the lines converge at the <em>epipole</em> — the location of the other image's camera.</figcaption>
+</figure>
+
 ## Recovering the relative motion {#recover}
 
 Finally we decompose the essential matrix into rotation and translation. OpenCV uses the 5-point algorithm under the hood:
