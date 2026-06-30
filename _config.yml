@@ -10,6 +10,7 @@ highlighter: rouge
 kramdown:
   input: GFM
   syntax_highlighter: rouge
+  math_engine: null   # leave $...$ / $$...$$ untouched; MathJax renders them client-side
 
 # Build settings
 exclude:

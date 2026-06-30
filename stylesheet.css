@@ -201,3 +201,10 @@ figure.large  img { max-width:640px; }
 .legend dd { margin:0 0 6px 132px; }
 
 .footer { margin:48px 0 24px 0; color:#999; font-size:13px; text-align:center; border-top:1px solid #eee; padding-top:16px; }
+
+/* blog modules on the home page */
+.module { margin-bottom:22px; }
+.module-h { color:#1772d0; font-size:21px; font-weight:700; margin:24px 0 4px; }
+.part-line { font-size:14px; color:#333; margin:6px 0 0 2px; line-height:1.9; }
+.part-name { font-weight:700; }
+.part-soon { color:#999; font-size:13px; margin:8px 0 0 2px; }

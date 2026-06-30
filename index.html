@@ -67,18 +67,28 @@ title: ""
         </tr>
       </tbody></table>
 
-      <!-- Blog entries -->
-      <table style="width:100%;border:0px;border-spacing:0px 10px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
-        <tr>
-          <td style="padding:8px 16px;vertical-align:top">
-            <a href="{{ '/vo_en.html' | relative_url }}"><span class="papertitle">Visual Odometry Tutorial</span></a>
-            <br>
-            A from-scratch walk-through of monocular Visual Odometry on the real-world Argoverse dataset.
-            <br>
-            <a href="{{ '/vo_en.html' | relative_url }}">English</a> &nbsp;/&nbsp; <a href="{{ '/vo_vi.html' | relative_url }}">Tiếng Việt</a>
-          </td>
-        </tr>
-      </tbody></table>
+      <!-- Blog entries: Module -> Part -> entries -->
+      <div style="padding:0 16px;">
+
+        <div class="module">
+          <div class="module-h">Self-driving car</div>
+
+          <div class="part-line">
+            <span class="part-name">Localization &amp; Mapping:</span>
+            <a href="{{ '/vo_en.html' | relative_url }}">Odometry</a> (<a href="{{ '/vo_en.html' | relative_url }}">en</a>, <a href="{{ '/vo_vi.html' | relative_url }}">vn</a>),
+            <a href="{{ '/slam_en.html' | relative_url }}">SLAM</a> (<a href="{{ '/slam_en.html' | relative_url }}">en</a>, <a href="{{ '/slam_vi.html' | relative_url }}">vn</a>),
+            <a href="{{ '/localization_en.html' | relative_url }}">Localization</a> (<a href="{{ '/localization_en.html' | relative_url }}">en</a>, <a href="{{ '/localization_vi.html' | relative_url }}">vn</a>)
+          </div>
+
+          <div class="part-soon">More parts coming: Road &amp; Lane Detection &middot; Reconstruction &amp; Motion &middot; Vehicle Dynamics &middot; Vehicle Control</div>
+        </div>
+
+        <div class="module">
+          <div class="module-h">Perception robotics</div>
+          <div class="part-soon">Coming soon: Event cameras &middot; asynchronous, high-speed / high-dynamic-range vision for robotics.</div>
+        </div>
+
+      </div>
 
       <!-- Footer -->
       <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>

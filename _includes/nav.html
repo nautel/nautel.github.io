@@ -2,7 +2,7 @@
   <div class="brand">Lê <span>Tuân</span></div>
   <div>
     <a href="{{ '/' | relative_url }}">{{ page.nav_home | default: 'Home' }}</a>
-    <a href="{{ '/vo_en.html' | relative_url }}"{% if page.lang == 'en' %} class="active"{% endif %}>English</a>
-    <a href="{{ '/vo_vi.html' | relative_url }}"{% if page.lang == 'vi' %} class="active"{% endif %}>Tiếng Việt</a>
+    {% unless page.hide_en %}<a href="{{ page.en_url | default: '/vo_en.html' | relative_url }}"{% if page.lang == 'en' %} class="active"{% endif %}>English</a>{% endunless %}
+    <a href="{{ page.vi_url | default: '/vo_vi.html' | relative_url }}"{% if page.lang == 'vi' %} class="active"{% endif %}>Tiếng Việt</a>
   </div>
 </div>

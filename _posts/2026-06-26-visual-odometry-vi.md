@@ -13,18 +13,18 @@ footer_note: 'Lấy cảm hứng từ <a href="https://github.com/johnwlambert/v
 
 Visual Odometry (VO), SLAM và Localization là các phương pháp tập trung ước lượng chuyển động của chính xe (ego-motion). Thật vậy, để một chiếc xe tự lái được thì nó phải biết chuyển động của chính nó lẫn các phương tiện khác.
 
-VO trong tiếng Hy Lạp là sự kết hợp giữa *hodos* (route) + *metron* (measure). VO tập trung ước lượng chuyển động **tương đối** từ ảnh: tìm phép biến đổi vật rắn (rigid body) `(R, t)` với 6 bậc tự do giữa cảnh tại thời điểm `t` và `t+1`. Khác với định vị toàn cục, VO nối tiếp các pose và không cần bản đồ trước.
+VO tập trung ước lượng chuyển động **tương đối** từ ảnh: tìm phép biến đổi vật rắn (rigid body) `(R, t)` với 6 bậc tự do giữa cảnh tại thời điểm `t` và `t+1`. Khác với định vị toàn cục, VO nối tiếp các pose và không cần bản đồ trước. Bản thân chữ VO trong tiếng Hy Lạp là sự kết hợp giữa *hodos* (route) + *metron* (measure).
 
 Trong bài này ta triển khai toàn bộ quy trình Visual Odometry trên tập dữ liệu thực **Argoverse 1**.
 
 <div class="legend">
   <p><strong>Ký hiệu dùng trong bài</strong></p>
   <dl>
-    <dt><span class="m"><sup>A</sup>T<sub>B</sub></span></dt>
-    <dd>phép biến đổi SE(3) đưa điểm từ frame <span class="m">B</span> sang frame <span class="m">A</span> (= pose của <span class="m">B</span> trong <span class="m">A</span>). Trong code: <code>A_SE3_B</code>.</dd>
-    <dt><span class="m"><sup>A</sup>R<sub>B</sub></span>, <span class="m"><sup>A</sup>t<sub>B</sub></span></dt>
-    <dd>phần rotation và translation của <span class="m"><sup>A</sup>T<sub>B</sub></span>.</dd>
-    <dt><span class="m">K</span>, <span class="m">E</span>, <span class="m">F</span></dt>
+    <dt>${}^{A}T_{B}$</dt>
+    <dd>phép biến đổi SE(3) đưa điểm từ frame $B$ sang frame $A$ (= pose của $B$ trong $A$). Trong code: <code>A_SE3_B</code>.</dd>
+    <dt>${}^{A}R_{B}$, ${}^{A}t_{B}$</dt>
+    <dd>phần rotation và translation của ${}^{A}T_{B}$.</dd>
+    <dt>$K$, $E$, $F$</dt>
     <dd>nội tham số camera, essential matrix, fundamental matrix.</dd>
   </dl>
 </div>
@@ -43,7 +43,7 @@ Trong bài này ta triển khai toàn bộ quy trình Visual Odometry trên tậ
 
 Argoverse là tập dữ liệu lớn về xe tự hành. Ở đây ta chỉ dùng 2 ảnh từ camera trước, tải về từ [Argoverse 1](https://www.argoverse.org/av1.html#download-link) (Training part 1 — mỗi part có nhiều log). Ảnh có kích thước 1920×1200 px ở 30 fps, và mỗi log đi kèm quỹ đạo của xe trong hệ tọa độ toàn cục (ví dụ hệ tọa độ thành phố).
 
-**Bài toán:** tái tạo lại quỹ đạo này chỉ dựa vào ảnh, qua các cặp điểm tương ứng 2D.
+**Bài toán:** tái tạo lại quỹ đạo này chỉ dựa vào ảnh, qua các cặp điểm tương ứng 2D. Argoverse dùng quy ước hệ tọa độ sau: `x` hướng tới trước (hướng lái), `y` sang trái xe, `z` hướng lên (ngược trọng lực).
 
 <figure>
   <img src="/images/VO/Car_sensor_schematic.png" alt="Hệ tọa độ của xe và cảm biến trong tập dữ liệu Argoverse" style="width:55%">
@@ -118,9 +118,9 @@ Trong hệ egovehicle, rotation tương đối là **yaw ≈ −32.5°** quanh t
 
 ## Chuyển sang hệ tọa độ camera {#camframe}
 
-Một điểm tinh tế nhưng quan trọng: thuật toán VO cho ra `(R, t)` giữa hai frame *camera*, chứ không phải giữa hai frame *xe*. Khi chạy eight-point trên các cặp điểm 2D, cái ta khôi phục được là <span class="m"><sup>c1</sup>R<sub>c2</sub></span> và <span class="m"><sup>c1</sup>t<sub>c2</sub></span> — chuyển động của camera giữa hai ảnh.
+Một điểm tinh tế nhưng quan trọng: thuật toán VO cho ra `(R, t)` giữa hai frame *camera*, chứ không phải giữa hai frame *xe*. Khi chạy eight-point trên các cặp điểm 2D, cái ta khôi phục được là ${}^{c1}R_{c2}$ và ${}^{c1}t_{c2}$ — chuyển động của camera giữa hai ảnh.
 
-Vậy nên để kiểm tra VO đoán đúng hay không, phần ground truth (vốn đang ở ego frame) phải được chuyển sang đúng quy ước camera. Ta compose pose của xe với phép biến đổi ngoại (extrinsic) cố định <span class="m"><sup>ego</sup>T<sub>cam</sub></span> đọc từ file calibration, để cả VO lẫn ground truth cùng nằm trong một hệ trước khi so sánh.
+Vậy nên để kiểm tra VO đoán đúng hay không, phần ground truth (vốn đang ở ego frame) phải được chuyển sang đúng quy ước camera. Ta compose pose của xe với phép biến đổi ngoại (extrinsic) cố định ${}^{ego}T_{cam}$ đọc từ file calibration, để cả VO lẫn ground truth cùng nằm trong một hệ trước khi so sánh.
 
 ```python
 # egovehicle_SE3_camera: đọc từ vehicle_calibration_info.json
@@ -142,7 +142,7 @@ Ground truth t       : [ 2.64 -0.03 12.05]
 
 ## VO: gán nhãn correspondence thủ công {#corr}
 
-Để chạy VO, trước hết ta cần các cặp điểm tương đồng giữa hai ảnh. Các correspondence này có thể ước lượng bằng phương pháp cổ điển (DoG + SIFT + RANSAC) hay deep method (SuperPoint + SuperGlue). Trong ví dụ này ta gán nhãn thủ công bằng [`collect_ground_truth_corr.py`](https://github.com/johnwlambert/visual-odometry-tutorial/blob/main/collect_ground_truth_corr.py): script dùng `ginput()` của matplotlib cho phép người dùng click các điểm trên mỗi ảnh rồi lưu correspondence ra file pickle.
+Để chạy VO, trước hết ta cần các cặp điểm tương ứng giữa hai ảnh. Các correspondence này có thể ước lượng bằng phương pháp cổ điển (DoG + SIFT + RANSAC) hay deep method (SuperPoint + SuperGlue). Trong ví dụ này ta gán nhãn thủ công bằng [`collect_ground_truth_corr.py`](https://github.com/johnwlambert/visual-odometry-tutorial/blob/main/collect_ground_truth_corr.py): script dùng `ginput()` của matplotlib cho phép người dùng click các điểm trên mỗi ảnh rồi lưu correspondence ra file pickle.
 
 ```bash
 export IMG_DIR=train1/273c1883-673a-36bf-b124-88311b1a80be/ring_front_center
@@ -179,7 +179,7 @@ img1_kpts = np.hstack([X1.reshape(-1,1), Y1.reshape(-1,1)]).astype(np.int32)
 img2_kpts = np.hstack([X2.reshape(-1,1), Y2.reshape(-1,1)]).astype(np.int32)
 ```
 
-Có hai ma trận liên quan. **Fundamental matrix** <span class="m">F</span> liên hệ các điểm ở tọa độ pixel, không cần biết camera. **Essential matrix** <span class="m">E</span> liên hệ các điểm ở tọa độ chuẩn hóa nên cần nội tham số <span class="m">K</span>. Quan hệ: <span class="m">F = K<sup>&minus;T</sup> E K<sup>&minus;1</sup></span>:
+Có hai ma trận liên quan. **Fundamental matrix** $F$ liên hệ các điểm ở tọa độ pixel, không cần biết camera. **Essential matrix** $E$ liên hệ các điểm ở tọa độ chuẩn hóa nên cần nội tham số $K$. Quan hệ: $F = K^{-T} E K^{-1}$:
 
 ```python
 def get_fmat_from_emat(i2_E_i1, K1, K2):
@@ -187,7 +187,7 @@ def get_fmat_from_emat(i2_E_i1, K1, K2):
     return i2_F_i1
 ```
 
-Vì camera ở hai pose giống nhau nên <span class="m">K</span> không đổi. Ta ước lượng <span class="m">E</span> bằng OpenCV, dùng RANSAC để loại outlier:
+Vì camera ở hai pose giống nhau nên $K$ không đổi. Ta ước lượng $E$ bằng OpenCV, dùng RANSAC để loại outlier:
 
 ```python
 import cv2
@@ -231,7 +231,7 @@ print(np.round(cam2_t_cam1.squeeze(), 2))
 [ 0.25  0.03 -0.97]
 ```
 
-Có một vấn đề. Rotation tương đối thu được là **−30.5°** chứ không phải `+32°` như mong đợi, và translation hướng về `−z` thay vì `+z`. Lý do là `recoverPose` trả về phép biến đổi *nghịch đảo* (<span class="m"><sup>c2</sup>R<sub>c1</sub></span> thay vì <span class="m"><sup>c1</sup>R<sub>c2</sub></span>). Nghịch đảo nó lại rồi so trực tiếp với ground truth:
+Có một vấn đề. Rotation tương đối thu được là **−30.5°** chứ không phải `+32°` như mong đợi, và translation hướng về `−z` thay vì `+z`. Lý do là `recoverPose` trả về phép biến đổi *nghịch đảo* (${}^{c2}R_{c1}$ thay vì ${}^{c1}R_{c2}$). Nghịch đảo nó lại rồi so trực tiếp với ground truth:
 
 ```python
 # đảo ngược cam2_T_cam1 -> cam1_T_cam2, rồi so với ground truth
@@ -257,10 +257,10 @@ Sau khi đảo ngược, yaw ≈ **+30.5°** (ground truth +32.5°) và hướng
 
 ## Phụ lục: quy ước & tọa độ đồng nhất {#notes}
 
-**1. Ký hiệu.** <span class="m"><sup>A</sup>T<sub>B</sub></span> (viết `A_SE3_B` trong code) là phép biến đổi đưa điểm từ hệ <span class="m">B</span> sang hệ <span class="m">A</span> — chính là pose của <span class="m">B</span> trong hệ <span class="m">A</span>.
+**1. Ký hiệu.** ${}^{A}T_{B}$ (viết `A_SE3_B` trong code) là phép biến đổi đưa điểm từ hệ $B$ sang hệ $A$ — chính là pose của $B$ trong hệ $A$.
 
-**2. Compose.** Compose hai phép SE(3) chính là nhân hai ma trận 4×4, nên <span class="m"><sup>A</sup>T<sub>C</sub> = <sup>A</sup>T<sub>B</sub> &middot; <sup>B</sup>T<sub>C</sub></span> (trong code, `A_SE3_C = A_SE3_B.compose(B_SE3_C)`).
+**2. Compose.** Compose hai phép SE(3) chính là nhân hai ma trận 4×4, nên ${}^{A}T_{C} = {}^{A}T_{B} \cdot {}^{B}T_{C}$ (trong code, `A_SE3_C = A_SE3_B.compose(B_SE3_C)`).
 
-**3. Tại sao cần tọa độ đồng nhất (homogeneous)?** Phép tịnh tiến không phải phép tuyến tính, trong khi một phép SE(3) gồm xoay rồi *mới* tịnh tiến. Nếu chỉ dùng vector 3 chiều, bạn không thể gộp xoay và tịnh tiến vào một phép nhân ma trận duy nhất — mỗi lần phải nhân <span class="m">R</span> rồi cộng <span class="m">t</span> riêng, rất rối khi compose nhiều bước.
+**3. Tại sao cần tọa độ đồng nhất (homogeneous)?** Phép tịnh tiến không phải phép tuyến tính, trong khi một phép SE(3) gồm xoay rồi *mới* tịnh tiến. Nếu chỉ dùng vector 3 chiều, bạn không thể gộp xoay và tịnh tiến vào một phép nhân ma trận duy nhất — mỗi lần phải nhân $R$ rồi cộng $t$ riêng, rất rối khi compose nhiều bước.
 
-Tọa độ đồng nhất giải quyết bằng cách thêm một chiều: nâng điểm <span class="m">p</span> lên vector 4 chiều bằng cách thêm số `1`, rồi nhét <span class="m">R</span> và <span class="m">t</span> vào một ma trận 4×4 duy nhất. Một phép nhân giờ làm được cả hai việc. Nó cũng xử lý **phép chiếu**: camera chiếu điểm 3D xuống ảnh 2D bằng cách chia cho độ sâu <span class="m">Z</span>, mà phép chia này không tuyến tính — nhưng quy ước đồng nhất xử lý gọn gàng.
+Tọa độ đồng nhất giải quyết bằng cách thêm một chiều: nâng điểm $p$ lên vector 4 chiều bằng cách thêm số `1`, rồi nhét $R$ và $t$ vào một ma trận 4×4 duy nhất. Một phép nhân giờ làm được cả hai việc. Nó cũng xử lý **phép chiếu**: camera chiếu điểm 3D xuống ảnh 2D bằng cách chia cho độ sâu $Z$, mà phép chia này không tuyến tính — nhưng quy ước đồng nhất xử lý gọn gàng.

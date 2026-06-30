@@ -20,11 +20,11 @@ In this post we implement the full Visual Odometry pipeline on the real-world **
 <div class="legend">
   <p><strong>Notation used throughout</strong></p>
   <dl>
-    <dt><span class="m"><sup>A</sup>T<sub>B</sub></span></dt>
-    <dd>SE(3) transform mapping a point from frame <span class="m">B</span> into frame <span class="m">A</span> (equivalently, the pose of <span class="m">B</span> in <span class="m">A</span>). In code: <code>A_SE3_B</code>.</dd>
-    <dt><span class="m"><sup>A</sup>R<sub>B</sub></span>, <span class="m"><sup>A</sup>t<sub>B</sub></span></dt>
-    <dd>the rotation and translation parts of <span class="m"><sup>A</sup>T<sub>B</sub></span>.</dd>
-    <dt><span class="m">K</span>, <span class="m">E</span>, <span class="m">F</span></dt>
+    <dt>${}^{A}T_{B}$</dt>
+    <dd>SE(3) transform mapping a point from frame $B$ into frame $A$ (equivalently, the pose of $B$ in $A$). In code: <code>A_SE3_B</code>.</dd>
+    <dt>${}^{A}R_{B}$, ${}^{A}t_{B}$</dt>
+    <dd>the rotation and translation parts of ${}^{A}T_{B}$.</dd>
+    <dt>$K$, $E$, $F$</dt>
     <dd>camera intrinsics, essential matrix, fundamental matrix.</dd>
   </dl>
 </div>
@@ -116,9 +116,9 @@ In the egovehicle frame the relative rotation is a **yaw of about −32.5°** ab
 
 ## Moving to the camera coordinate frame {#camframe}
 
-A subtle but crucial point: the VO algorithm returns `(R, t)` between the two *camera* frames, not between the two *vehicle* frames. When we run the eight-point method on the 2D correspondences, what we recover is <span class="m"><sup>c1</sup>R<sub>c2</sub></span> and <span class="m"><sup>c1</sup>t<sub>c2</sub></span> — the motion of the camera between the two images.
+A subtle but crucial point: the VO algorithm returns `(R, t)` between the two *camera* frames, not between the two *vehicle* frames. When we run the eight-point method on the 2D correspondences, what we recover is ${}^{c1}R_{c2}$ and ${}^{c1}t_{c2}$ — the motion of the camera between the two images.
 
-So to check whether VO is correct, the ground truth (which lives in the ego frame) must be converted into the camera convention. We compose the ego pose with the fixed extrinsic transform <span class="m"><sup>ego</sup>T<sub>cam</sub></span> read from the calibration file, so that both VO and ground truth are expressed in the same frame before we compare them.
+So to check whether VO is correct, the ground truth (which lives in the ego frame) must be converted into the camera convention. We compose the ego pose with the fixed extrinsic transform ${}^{ego}T_{cam}$ read from the calibration file, so that both VO and ground truth are expressed in the same frame before we compare them.
 
 ```python
 # egovehicle_SE3_camera: read from vehicle_calibration_info.json
@@ -177,7 +177,7 @@ img1_kpts = np.hstack([X1.reshape(-1,1), Y1.reshape(-1,1)]).astype(np.int32)
 img2_kpts = np.hstack([X2.reshape(-1,1), Y2.reshape(-1,1)]).astype(np.int32)
 ```
 
-There are two related matrices here. The **fundamental matrix** <span class="m">F</span> relates points in pixel coordinates and needs no knowledge of the camera. The **essential matrix** <span class="m">E</span> relates points in normalized (calibrated) coordinates and therefore requires the intrinsics <span class="m">K</span>. They are related by <span class="m">F = K<sup>&minus;T</sup> E K<sup>&minus;1</sup></span>:
+There are two related matrices here. The **fundamental matrix** $F$ relates points in pixel coordinates and needs no knowledge of the camera. The **essential matrix** $E$ relates points in normalized (calibrated) coordinates and therefore requires the intrinsics $K$. They are related by $F = K^{-T} E K^{-1}$:
 
 ```python
 def get_fmat_from_emat(i2_E_i1, K1, K2):
@@ -185,7 +185,7 @@ def get_fmat_from_emat(i2_E_i1, K1, K2):
     return i2_F_i1
 ```
 
-Because the camera is the same at both poses, <span class="m">K</span> does not change. We estimate <span class="m">E</span> with OpenCV, using RANSAC to reject outliers:
+Because the camera is the same at both poses, $K$ does not change. We estimate $E$ with OpenCV, using RANSAC to reject outliers:
 
 ```python
 import cv2
@@ -229,7 +229,7 @@ print(np.round(cam2_t_cam1.squeeze(), 2))
 [ 0.25  0.03 -0.97]
 ```
 
-There is a catch. The recovered relative rotation is **−30.5°** rather than the expected `+32°`, and the translation points in `−z` instead of `+z`. The reason is that `recoverPose` returned the *inverse* transform (<span class="m"><sup>c2</sup>R<sub>c1</sub></span> instead of <span class="m"><sup>c1</sup>R<sub>c2</sub></span>). Inverting it and comparing directly against the ground truth:
+There is a catch. The recovered relative rotation is **−30.5°** rather than the expected `+32°`, and the translation points in `−z` instead of `+z`. The reason is that `recoverPose` returned the *inverse* transform (${}^{c2}R_{c1}$ instead of ${}^{c1}R_{c2}$). Inverting it and comparing directly against the ground truth:
 
 ```python
 # invert cam2_T_cam1 -> cam1_T_cam2, then compare to ground truth
@@ -255,10 +255,10 @@ After inverting, the yaw is ≈ **+30.5°** (ground truth +32.5°) and the trans
 
 ## Appendix: conventions & homogeneous coordinates {#notes}
 
-**1. Notation.** <span class="m"><sup>A</sup>T<sub>B</sub></span> (written `A_SE3_B` in code) is the transform that maps a point from frame <span class="m">B</span> into frame <span class="m">A</span> — equivalently, it is the pose of <span class="m">B</span> expressed in <span class="m">A</span>.
+**1. Notation.** ${}^{A}T_{B}$ (written `A_SE3_B` in code) is the transform that maps a point from frame $B$ into frame $A$ — equivalently, it is the pose of $B$ expressed in $A$.
 
-**2. Compose.** Composing two SE(3) transforms is just multiplying their 4×4 matrices, so <span class="m"><sup>A</sup>T<sub>C</sub> = <sup>A</sup>T<sub>B</sub> &middot; <sup>B</sup>T<sub>C</sub></span> (in code, `A_SE3_C = A_SE3_B.compose(B_SE3_C)`).
+**2. Compose.** Composing two SE(3) transforms is just multiplying their 4×4 matrices, so ${}^{A}T_{C} = {}^{A}T_{B} \cdot {}^{B}T_{C}$ (in code, `A_SE3_C = A_SE3_B.compose(B_SE3_C)`).
 
-**3. Why homogeneous coordinates?** Translation is not a linear map, yet an SE(3) transform is a rotation *followed by* a translation. With plain 3-vectors you cannot fold rotation and translation into a single matrix multiply — you would have to apply <span class="m">R</span> and then add <span class="m">t</span> separately, which becomes painful when composing many steps.
+**3. Why homogeneous coordinates?** Translation is not a linear map, yet an SE(3) transform is a rotation *followed by* a translation. With plain 3-vectors you cannot fold rotation and translation into a single matrix multiply — you would have to apply $R$ and then add $t$ separately, which becomes painful when composing many steps.
 
-Homogeneous coordinates fix this by adding one extra dimension: we lift a point <span class="m">p</span> to a 4-vector by appending a `1`, and pack <span class="m">R</span> and <span class="m">t</span> into a single 4×4 matrix. A single multiply now does two jobs at once. It also handles **projection**: a camera projects a 3D point onto the 2D image by dividing by depth <span class="m">Z</span>, and that division is not a linear operation — but the homogeneous convention absorbs it cleanly.
+Homogeneous coordinates fix this by adding one extra dimension: we lift a point $p$ to a 4-vector by appending a `1`, and pack $R$ and $t$ into a single 4×4 matrix. A single multiply now does two jobs at once. It also handles **projection**: a camera projects a 3D point onto the 2D image by dividing by depth $Z$, and that division is not a linear operation — but the homogeneous convention absorbs it cleanly.
