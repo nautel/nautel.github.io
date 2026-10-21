@@ -1,0 +1,58 @@
+---
+layout: default
+title: "Automatic 3D Annotation of LiDAR Data: Video Demo"
+description: "Video demo: automatic 3D annotation of LiDAR point clouds from text prompts, without human 3D labels."
+image: /images/demo/autolabel_vs_human.jpg
+noindex: true   # keep out of search engines until the paper is public
+sitemap: false
+---
+<main class="container">
+
+  <p class="back"><a href="{{ '/' | relative_url }}">&larr; Lê Tuân</a></p>
+
+  <section>
+    <h1 class="page-title">Automatic 3D Annotation of LiDAR Data from Text Prompts</h1>
+    <p class="lead">
+      Labeling 3D boxes in LiDAR point clouds is a major cost of building perception datasets, and every new object category needs a new labeling campaign.
+      I am developing a pipeline that produces these boxes automatically, by combining 2D vision foundation models on the camera images with the geometry of the LiDAR point cloud.
+      No human 3D labels are used.
+    </p>
+  </section>
+
+  <figure class="demo">
+    <video id="demo-detector" class="portrait-on-phone" autoplay muted loop playsinline controls preload="metadata" width="1280" height="532" poster="{{ '/images/demo/autolabel_vs_human.jpg' | relative_url }}" data-poster-phone="{{ '/images/demo/autolabel_vs_human_portrait.jpg' | relative_url }}" aria-label="Detector trained on automatic labels, next to human annotations">
+      <source src="{{ '/images/demo/autolabel_vs_human_portrait.mp4' | relative_url }}" type="video/mp4" media="(max-width: 600px)">
+      <source src="{{ '/images/demo/autolabel_vs_human.mp4' | relative_url }}" type="video/mp4">
+    </video>
+    <figcaption class="caption">
+      Teal: boxes from a LiDAR 3D detector trained only on automatically generated labels. Orange: the dataset's human annotations.
+    </figcaption>
+  </figure>
+
+  <figure class="demo">
+    <video autoplay muted loop playsinline controls preload="metadata" width="896" height="624" poster="{{ '/images/demo/text_prompt_annotation.jpg' | relative_url }}" aria-label="3D boxes for object categories named by text prompts">
+      <source src="{{ '/images/demo/text_prompt_annotation.mp4' | relative_url }}" type="video/mp4">
+    </video>
+    <figcaption class="caption">
+      3D boxes for categories absent from the dataset's label set (street lamp, traffic sign, trash bin), generated from text prompts alone.
+    </figcaption>
+  </figure>
+
+  <footer class="note">
+    Interested in this work? <a href="mailto:ltuanddgl@gmail.com">Email me</a>. Method details and code will be released with the publication.<br>
+    Data: <a href="https://www.kaggle.com/c/3d-object-detection-for-autonomous-vehicles">Lyft Level 5</a> (CC BY-NC-SA 4.0).
+  </footer>
+
+</main>
+
+<script>
+  // Phones get the stacked (portrait) video, so give them the matching poster too.
+  var detector = document.getElementById('demo-detector');
+  if (window.matchMedia('(max-width: 600px)').matches) {
+    detector.poster = detector.dataset.posterPhone;
+  }
+  // Respect reduced-motion: start paused, the controls stay available.
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('.demo video').forEach(function (v) { v.removeAttribute('autoplay'); v.pause(); });
+  }
+</script>

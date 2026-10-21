@@ -1,0 +1,107 @@
+---
+layout: default
+---
+<main class="container">
+
+  <!-- Bio -->
+  <section class="bio">
+    <div class="bio-text">
+      <h1 class="name">Lê Tuân <span class="alt-name">(Tuan Le)</span></h1>
+      <p class="tagline">3D perception for autonomous driving and robotics</p>
+      <p>
+        I am a postdoctoral researcher at the <a href="https://www.hds.utc.fr/">Heudiasyc Laboratory</a>, <a href="https://www.utc.fr/">University of Technology of Compiègne (UTC)</a>, France, working with <a href="https://www.hds.utc.fr/~moreajul/dokuwiki/">Julien Moreau</a> and <a href="https://www.hds.utc.fr/~fdavoine/dokuwiki/">Franck Davoine</a>.
+        My research covers open-vocabulary 3D object detection from LiDAR and camera data and, more recently, event-based vision with binary neural networks.
+      </p>
+      <p>
+        I received my PhD from UTC (<a href="https://roberval.utc.fr/">Roberval Laboratory</a>) in 2024, advised by <a href="https://scholar.google.com/citations?user=4FtMcpwAAAAJ&amp;hl=en">Vu Hai Canh</a> and <a href="https://theses.fr/033616779">Zohra Cherfi-Boulanger</a>, with the thesis <a href="https://theses.hal.science/tel-05058605">"Semi-supervised Deep Learning for Robust Anomaly Detection in Smart Manufacturing Systems"</a>.
+      </p>
+      <p>
+        I am currently looking for research and engineering positions in 3D perception and computer vision.
+      </p>
+      <p class="links">
+        <a href="mailto:ltuanddgl@gmail.com">Email</a> &nbsp;/&nbsp;
+        <a href="https://github.com/nautel">GitHub</a> &nbsp;/&nbsp;
+        <a href="https://www.linkedin.com/in/nautel/">LinkedIn</a>
+      </p>
+    </div>
+    <div class="bio-photo">
+      <img src="{{ '/images/LeTuan_CV.jpg' | relative_url }}" alt="Photo of Lê Tuân" width="600" height="600">
+    </div>
+  </section>
+
+  <!-- Research -->
+  <section>
+    <h2>Research</h2>
+
+    <!--
+      Paper entry template: copy a <div class="paper"> block and fill it in.
+      Thumbnail is 160x160. The <video> is optional: it fades in on hover (pure CSS, no script).
+      Add class "highlight" to the paper div to give it a yellow background.
+    -->
+
+    <div class="paper">
+      <a class="paper-thumb" href="{{ '/demo.html' | relative_url }}" tabindex="-1" aria-hidden="true">
+        <video class="hover-media" muted autoplay loop playsinline>
+          <source src="{{ '/images/demo/thumb.mp4' | relative_url }}" type="video/mp4">
+        </video>
+        <img src="{{ '/images/demo/thumb.jpg' | relative_url }}" alt="" width="160" height="160" loading="lazy">
+      </a>
+      <div class="paper-info">
+        <a href="{{ '/demo.html' | relative_url }}"><span class="papertitle">Automatic 3D Annotation of LiDAR Data from Text Prompts</span></a>
+        <br>
+        <em>Ongoing research</em>, 2026
+        <br>
+        <a href="{{ '/demo.html' | relative_url }}">video demo</a>
+        <p>
+          Producing 3D bounding boxes in LiDAR point clouds without human 3D labels, by combining 2D vision foundation models with LiDAR geometry. Any object category that can be named in text can be annotated.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- News -->
+  <section>
+    <h2>News</h2>
+    <ul class="news">
+      <li>
+        <span class="news-date">Jul 2026</span>
+        <span>Started a postdoc on <a href="https://www.hds.utc.fr/~moreajul/dokuwiki/en/reve-bnn">REVE-BNN</a> (Robotic Event Vision through Efficient BNNs): event cameras and binary neural networks.</span>
+      </li>
+      <li>
+        <span class="news-date">Mar 2025</span>
+        <span>Started a postdoc on the <a href="https://project.inria.fr/annapolis/">Annapolis project</a>, focusing on 3D object detection.</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Blog: Module -> Part -> entries -->
+  <section>
+    <h2>Blog</h2>
+    <div class="blog-index">
+
+      <div class="module">
+        <h3 class="module-h">Self-driving cars</h3>
+
+        <div class="part-line">
+          <span class="part-name">Localization &amp; Mapping:</span>
+          <a href="{{ '/vo_en.html' | relative_url }}">Visual Odometry</a> (<a href="{{ '/vo_vi.html' | relative_url }}" hreflang="vi" lang="vi" aria-label="Visual Odometry (Tiếng Việt)">VI</a>),
+          <a href="{{ '/slam_en.html' | relative_url }}">SLAM</a> (<a href="{{ '/slam_vi.html' | relative_url }}" hreflang="vi" lang="vi" aria-label="SLAM (Tiếng Việt)">VI</a>),
+          <a href="{{ '/localization_en.html' | relative_url }}">Localization</a> (<a href="{{ '/localization_vi.html' | relative_url }}" hreflang="vi" lang="vi" aria-label="Localization (Tiếng Việt)">VI</a>)
+        </div>
+
+        <div class="part-soon">More parts coming: Road &amp; Lane Detection &middot; Reconstruction &amp; Motion &middot; Vehicle Dynamics &middot; Vehicle Control</div>
+      </div>
+
+      <div class="module">
+        <h3 class="module-h">Robot perception</h3>
+        <div class="part-soon">Coming soon: Event cameras &middot; asynchronous, high-speed / high-dynamic-range vision for robotics.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    Website template from <a href="https://github.com/jonbarron/jonbarron_website">Jon Barron</a>
+  </footer>
+
+</main>
