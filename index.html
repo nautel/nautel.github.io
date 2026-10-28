@@ -7,19 +7,23 @@ layout: default
   <section class="bio">
     <div class="bio-text">
       <h1 class="name">Lê Tuân <span class="alt-name">(Tuan Le)</span></h1>
-      <p class="tagline">3D perception for autonomous driving and robotics</p>
+      <p class="tagline">AI/ML Engineer · Computer Vision</p>
       <p>
         I am a postdoctoral researcher at the <a href="https://www.hds.utc.fr/">Heudiasyc Laboratory</a>, <a href="https://www.utc.fr/">University of Technology of Compiègne (UTC)</a>, France, working with <a href="https://www.hds.utc.fr/~moreajul/dokuwiki/">Julien Moreau</a> and <a href="https://www.hds.utc.fr/~fdavoine/dokuwiki/">Franck Davoine</a>.
-        My research covers open-vocabulary 3D object detection from LiDAR and camera data and, more recently, event-based vision with binary neural networks.
+        I work on LiDAR–camera 3D perception for autonomous vehicles: open-vocabulary 3D object detection and, since July 2026, event-based vision with binary neural networks.
+        I have deployed perception models in real time on the lab vehicle (ROS 2) and on an FPGA edge board (INT8, event camera).
       </p>
       <p>
-        I received my PhD from UTC (<a href="https://roberval.utc.fr/">Roberval Laboratory</a>) in 2024, advised by <a href="https://scholar.google.com/citations?user=4FtMcpwAAAAJ&amp;hl=en">Vu Hai Canh</a> and <a href="https://theses.fr/033616779">Zohra Cherfi-Boulanger</a>, with the thesis <a href="https://theses.hal.science/tel-05058605">"Semi-supervised Deep Learning for Robust Anomaly Detection in Smart Manufacturing Systems"</a>.
+        I received my PhD from UTC (<a href="https://roberval.utc.fr/">Roberval Laboratory</a>) in December 2024, advised by <a href="https://scholar.google.com/citations?user=4FtMcpwAAAAJ&amp;hl=en">Vu Hai Canh</a> and <a href="https://theses.fr/033616779">Zohra Cherfi-Boulanger</a>, with the thesis <a href="https://theses.hal.science/tel-05058605">"Semi-supervised Deep Learning for Robust Anomaly Detection in Smart Manufacturing Systems"</a>.
+        My PhD covered anomaly detection on industrial sensor signals, control-chart monitoring, product-quality forecasting and explainable defect detection.
       </p>
       <p>
-        I am currently looking for research and engineering positions in 3D perception and computer vision.
+        I am looking for <strong>AI/ML engineer</strong> positions in <strong>computer vision</strong> and <strong>robotics</strong> for industrial applications, such as predictive maintenance, visual inspection and autonomous systems.
       </p>
       <p class="links">
         <a href="mailto:ltuanddgl@gmail.com">Email</a> &nbsp;/&nbsp;
+        <a href="{{ '/files/Tuan_LE_CV.pdf' | relative_url }}">CV</a> &nbsp;/&nbsp;
+        <a href="https://scholar.google.com/citations?user=py3sPfwAAAAJ">Google Scholar</a> &nbsp;/&nbsp;
         <a href="https://github.com/nautel">GitHub</a> &nbsp;/&nbsp;
         <a href="https://www.linkedin.com/in/nautel/">LinkedIn</a>
       </p>
@@ -27,6 +31,44 @@ layout: default
     <div class="bio-photo">
       <img src="{{ '/images/LeTuan_CV.jpg' | relative_url }}" alt="Photo of Lê Tuân" width="600" height="600">
     </div>
+  </section>
+
+  <!-- News -->
+  <section>
+    <h2>News</h2>
+    <ul class="news">
+      <li>
+        <span class="news-date">Jul 2026</span>
+        <span>Started a postdoc on <a href="https://www.hds.utc.fr/~moreajul/dokuwiki/en/reve-bnn">REVE-BNN</a> (Robotic Event Vision through Efficient BNNs): event cameras and binary neural networks.</span>
+      </li>
+      <li>
+        <span class="news-date">Mar 2025</span>
+        <span>Started a postdoc on the <a href="https://project.inria.fr/annapolis/">Annapolis project</a>, focusing on 3D object detection.</span>
+      </li>
+      <li>
+        <span class="news-date">Dec 2024</span>
+        <span>Defended my PhD thesis at UTC on 10 December 2024.</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Experience -->
+  <section>
+    <h2>Experience</h2>
+    <ul class="news">
+      <li>
+        <span class="news-date">2025–now</span>
+        <span><strong>Postdoctoral researcher</strong>, Heudiasyc (CNRS), UTC<br>LiDAR–camera auto-labeling with VLMs: less manual annotation, rare objects detected.</span>
+      </li>
+      <li>
+        <span class="news-date">2021–2024</span>
+        <span><strong>PhD researcher</strong>, Roberval Laboratory, UTC<br>Anomaly detection and predictive maintenance for smart manufacturing.</span>
+      </li>
+      <li>
+        <span class="news-date">2019–2021</span>
+        <span><strong>Electrical engineer</strong>, VATEC Energy Consulting · EVN (internship)<br>Wind-resource analysis and 500 kV grid planning.</span>
+      </li>
+    </ul>
   </section>
 
   <!-- Research -->
@@ -53,23 +95,123 @@ layout: default
         <br>
         <a href="{{ '/demo.html' | relative_url }}">video demo</a>
         <p>
-          Producing 3D bounding boxes in LiDAR point clouds without human 3D labels, by combining 2D vision foundation models with LiDAR geometry. Any object category that can be named in text can be annotated.
+          Producing 3D bounding boxes in LiDAR point clouds without human 3D labels, by combining 2D vision foundation models with LiDAR geometry. New categories are specified by text prompts; the demo shows street lamps, traffic signs and trash bins, which are absent from the dataset's label set.
+        </p>
+      </div>
+    </div>
+
+    <div class="paper">
+      <a class="paper-thumb" href="https://github.com/nautel/cmapss-rul-miras" tabindex="-1" aria-hidden="true">
+        <img src="{{ '/images/research/cmapss.jpg' | relative_url }}" alt="" width="160" height="160" loading="lazy">
+      </a>
+      <div class="paper-info">
+        <a href="https://github.com/nautel/cmapss-rul-miras"><span class="papertitle">Remaining-Useful-Life Prediction for Turbofan Engines: a Reproducible Benchmark on NASA C-MAPSS</span></a>
+        <br>
+        <em>Personal project</em>, 2026
+        <br>
+        <a href="https://github.com/nautel/cmapss-rul-miras">code</a>
+        <p>
+          About 2,900 training runs comparing literature baselines (DCNN, a re-implemented STA-HPINN) with test-time-memory sequence models (Titans, Memora, Mamba2, DeltaNet) in one shared pipeline, scored with engine-level bootstrap confidence intervals.
+          Operating-condition normalisation mattered 3.4× more than architecture, and two published results could not be reproduced.
+        </p>
+      </div>
+    </div>
+
+    <div class="paper">
+      <a class="paper-thumb" href="https://doi.org/10.1016/j.neucom.2024.127791" tabindex="-1" aria-hidden="true">
+        <img src="{{ '/images/research/rcled.jpg' | relative_url }}" alt="" width="160" height="160" loading="lazy">
+      </a>
+      <div class="paper-info">
+        <a href="https://doi.org/10.1016/j.neucom.2024.127791"><span class="papertitle">Unsupervised Detecting Anomalies in Multivariate Time Series by Robust Convolutional LSTM Encoder–Decoder (RCLED)</span></a>
+        <br>
+        <strong>Tuan Le</strong>, Hai Canh Vu, Amélie Ponchet-Durupt, Nassim Boudaoud, Zohra Cherfi-Boulanger, Thao Nguyen-Trang
+        <br>
+        <em>Neurocomputing</em>, 2024
+        <br>
+        <a href="https://doi.org/10.1016/j.neucom.2024.127791">paper</a> /
+        <a href="https://github.com/nautel/RCLED">code</a>
+        <p>
+          An autoencoder with convolution, LSTM and self-attention layers, trained with a scheme derived from robust PCA that separates noise from normal patterns, so no anomaly labels are needed.
+          It reaches an F1 score of 0.85 on vibration and temperature data from an industrial machine.
+        </p>
+      </div>
+    </div>
+
+    <div class="paper">
+      <a class="paper-thumb" href="https://collection-numerique.uqtr.ca/id/eprint/2057/" tabindex="-1" aria-hidden="true">
+        <img src="{{ '/images/research/cigi.jpg' | relative_url }}" alt="" width="160" height="160" loading="lazy">
+      </a>
+      <div class="paper-info">
+        <a href="https://collection-numerique.uqtr.ca/id/eprint/2057/"><span class="papertitle">Forecasting Product Quality Using Peephole Long Short-Term Memory</span></a>
+        <br>
+        <strong>Tuan Le</strong>, Hai Canh Vu, Amélie Ponchet-Durupt, Nassim Boudaoud, Zohra Cherfi-Boulanger
+        <br>
+        <em>CIGI QUALITA MOSIM</em>, 2023 &nbsp;<span class="badge">Oral</span>
+        <br>
+        <a href="https://collection-numerique.uqtr.ca/id/eprint/2057/">paper</a> /
+        <a href="https://doi.org/10.60662/8gn5-5575">doi</a> /
+        <a href="{{ '/files/slides_CIGI2023.pdf' | relative_url }}">slides</a>
+        <p>
+          Forecasting non-linear, non-stationary product-quality time series in manufacturing with peephole LSTMs, as an early signal of the production system's health.
+        </p>
+      </div>
+    </div>
+
+    <div class="paper">
+      <a class="paper-thumb" href="https://doi.org/10.3850/978-981-18-5183-4_R22-09-265" tabindex="-1" aria-hidden="true">
+        <img src="{{ '/images/research/esrel.jpg' | relative_url }}" alt="" width="160" height="160" loading="lazy">
+      </a>
+      <div class="paper-info">
+        <a href="https://doi.org/10.3850/978-981-18-5183-4_R22-09-265"><span class="papertitle">A Deep Learning Approach for Control Chart Patterns (CCPs) Prediction</span></a>
+        <br>
+        <strong>Tuan Le</strong>, Hai Canh Vu, Nassim Boudaoud, Zohra Cherfi-Boulanger, Amélie Ponchet-Durupt, Ho Si Hung Nguyen
+        <br>
+        <em>European Safety and Reliability Conference (ESREL)</em>, 2022 &nbsp;<span class="badge">Oral</span>
+        <br>
+        <a href="https://doi.org/10.3850/978-981-18-5183-4_R22-09-265">paper</a> /
+        <a href="{{ '/files/slides_ESREL2022.pdf' | relative_url }}">slides</a>
+        <p>
+          A CNN that predicts control-chart patterns in simulated SPC time series, covering six process states (normal, cyclic, upward and downward trends and shifts), so that abnormal states can be anticipated before defects occur. Thumbnail: illustration of the six patterns.
+        </p>
+      </div>
+    </div>
+
+    <div class="paper">
+      <a class="paper-thumb" href="https://doi.org/10.1109/PTC.2019.8810879" tabindex="-1" aria-hidden="true">
+        <img src="{{ '/images/research/powertech.jpg' | relative_url }}" alt="" width="160" height="160" loading="lazy">
+      </a>
+      <div class="paper-info">
+        <a href="https://doi.org/10.1109/PTC.2019.8810879"><span class="papertitle">New Planning for the 500 kV Vietnamese Grid with High Penetration of Renewable Energy Sources</span></a>
+        <br>
+        M. Q. Duong, H. H. Nguyen, <strong>Tuan Le</strong>, Marco Mussetta
+        <br>
+        <em>IEEE Milan PowerTech</em>, 2019
+        <br>
+        <a href="https://doi.org/10.1109/PTC.2019.8810879">paper</a> /
+        <a href="https://github.com/nautel/vietnamgrid">PyPSA notebooks</a>
+        <p>
+          A techno-economic model of Vietnam's 500 kV transmission grid (80 buses) built with PyPSA, for the 2030 plan with large wind and solar capacity.
+          Optimising the power flow before expanding the grid cut the cost of upgrading overloaded lines from $502 million to $95 million.
         </p>
       </div>
     </div>
   </section>
 
-  <!-- News -->
+  <!-- Talks -->
   <section>
-    <h2>News</h2>
+    <h2>Talks</h2>
     <ul class="news">
       <li>
-        <span class="news-date">Jul 2026</span>
-        <span>Started a postdoc on <a href="https://www.hds.utc.fr/~moreajul/dokuwiki/en/reve-bnn">REVE-BNN</a> (Robotic Event Vision through Efficient BNNs): event cameras and binary neural networks.</span>
+        <span class="news-date">2024</span>
+        <span>Unsupervised detecting anomalies in multivariate time series by Robust Convolutional LSTM Encoder–Decoder (RCLED). University of Lorraine, Nancy, France. <a href="{{ '/files/slides_Nancy2024.pdf' | relative_url }}">[slides]</a></span>
       </li>
       <li>
-        <span class="news-date">Mar 2025</span>
-        <span>Started a postdoc on the <a href="https://project.inria.fr/annapolis/">Annapolis project</a>, focusing on 3D object detection.</span>
+        <span class="news-date">2023</span>
+        <span>Explainable Artificial Intelligence (XAI) for non-conforming product detection: an application to fuel tank manufacturing. <em>12th IMA International Conference on Modelling in Industrial Maintenance and Reliability (MIMAR)</em>, University of Nottingham, UK. <a href="{{ '/files/slides_MIMAR2023.pdf' | relative_url }}">[slides]</a></span>
+      </li>
+      <li>
+        <span class="news-date">2022–23</span>
+        <span>Advanced predictive maintenance models based on machine learning for Industry 4.0. Roberval Lab doctoral days, UTC (poster 2022, oral 2023). <a href="{{ '/files/slides_JDD2023.pdf' | relative_url }}">[slides 2023]</a></span>
       </li>
     </ul>
   </section>

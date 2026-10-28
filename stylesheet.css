@@ -225,13 +225,29 @@ span.highlight {
 }
 
 .news-date {
-  flex: 0 0 72px;
+  flex: 0 0 88px;
   color: #666;
   white-space: nowrap;
 }
 
 .blog-index {
   padding: 0 16px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0 6px;
+  border: 1px solid #c9d3dd;
+  border-radius: 3px;
+  color: #1772d0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.pub-note {
+  margin: 4px 16px 0;
+  color: #444;
+  font-size: 14px;
 }
 
 footer {
@@ -384,6 +400,7 @@ figure.large  img { max-width:640px; }
   .page-title,
   .lead,
   .news,
+  .pub-note,
   .blog-index {
     padding-left: 0;
     padding-right: 0;
@@ -402,6 +419,19 @@ figure.large  img { max-width:640px; }
 
   .paper-thumb {
     margin: 8px 0 0;
+  }
+
+  .pub-note {
+    margin: 4px 0 0;
+  }
+
+  .news li {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .news-date {
+    flex-basis: auto;
   }
 
   .paper-info {
