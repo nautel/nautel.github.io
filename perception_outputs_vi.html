@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Đầu ra mà hệ thống nhận thức của xe tự hành phải cung cấp theo từng cấp độ, kiến trúc các hãng, và hướng world model.">
+<meta name="author" content="Lê Tuân">
+<link rel="canonical" href="https://nautel.github.io/perception_outputs_vi.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Yêu cầu đầu ra của hệ thống nhận thức cho xe tự hành">
+<meta property="og:description" content="Đầu ra mà hệ thống nhận thức của xe tự hành phải cung cấp theo từng cấp độ L0–L4, kiến trúc các hãng, và intermediate representation cho world model.">
+<meta property="og:url" content="https://nautel.github.io/perception_outputs_vi.html">
+<meta property="og:locale" content="vi_VN">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Yêu cầu đầu ra của hệ thống nhận thức cho xe tự hành","inLanguage":"vi","author":{"@type":"Person","name":"Lê Tuân","url":"https://nautel.github.io/"},"dateModified":"2026-11-11","url":"https://nautel.github.io/perception_outputs_vi.html"}</script>
 <title>Yêu cầu đầu ra của hệ thống nhận thức cho xe tự hành</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -427,8 +436,13 @@ body.t10 h3{font:600 20px "Lexend",sans-serif}
 body.t10 table{font-size:15.5px}
 body.t10 section{margin-top:72px}
 .tbar{display:none!important}
-.sitebar{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin:0 0 10px}
+.sitebar{margin:0 0 34px}
+.sitebar .brand{display:inline-block;font-size:30px;font-weight:700;line-height:1.2;color:var(--fg);text-decoration:none;margin:0 0 14px}
+.sitebar nav{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:19px}
 .sitebar a{color:var(--accent);text-decoration:none}.sitebar a:hover{text-decoration:underline}
+.sitebar .brand:hover{text-decoration:none}
+body[class^="t"] header.top h1{font-size:40px;line-height:1.15;letter-spacing:-.01em}
+@media(max-width:600px){body[class^="t"] header.top h1{font-size:30px}.sitebar .brand{font-size:26px}}
 .printnote{display:none}
 @media print{
   @page{size:A4 portrait;margin:14mm 14mm 16mm}
@@ -468,7 +482,7 @@ body.t10 section{margin-top:72px}
 </div></div>
 <header class="top">
   <button class="themebtn" id="themebtn" type="button">Sáng / Tối</button>
-  <div class="sitebar"><a href="/">← Lê Tuân</a><a href="/#blog">Blog</a><a href="/files/perception_outputs_vi.pdf">Tải bản PDF</a></div>
+  <div class="sitebar"><a class="brand" href="/">Lê Tuân</a><nav aria-label="Điều hướng trang"><a href="/">Trang chủ</a><a href="/#blog">Blog</a><a href="/files/perception_outputs_vi.pdf">Tải bản PDF</a></nav></div>
   <h1>Yêu cầu đầu ra của hệ thống nhận thức cho xe tự hành</h1>
   <p class="printnote">Bản PDF tĩnh. Bản tương tác (chọn cấp độ, bấm vào sơ đồ): https://nautel.github.io/perception_outputs_vi.html</p>
   <p class="byline">Lê Tuân · Cập nhật 11/11/2026 · Khoảng 20 phút đọc</p>
