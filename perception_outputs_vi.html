@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Đầu ra mà hệ thống nhận thức của xe tự hành phải cung cấp theo từng cấp độ, kiến trúc các hãng, và hướng world model.">
+<title>Yêu cầu đầu ra của hệ thống nhận thức cho xe tự hành</title>
+<style>
+:root{
+  --bg:#f7f7f5; --card:#ffffff; --fg:#1d1f23; --muted:#5d6470; --line:#d9dce1; --soft:#eef0f3;
+  --accent:#2563eb;
+  --c-sensor:#0f766e; --c-sensor-bg:#e6f4f2;
+  --c-model:#1d4ed8; --c-model-bg:#e8eefc;
+  --c-fuse:#6d28d9; --c-fuse-bg:#f0eafd;
+  --c-out:#b45309; --c-out-bg:#fdf3e4;
+  --c-use:#15803d; --c-use-bg:#e8f5ec;
+  --ok:#15803d; --mid:#ca8a04; --res:#be185d; --warn:#b91c1c;
+  --edge:#b9bec7; --edge-hi:#2563eb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121417; --card:#1b1e23; --fg:#e7e9ed; --muted:#9aa2ae; --line:#30353d; --soft:#23272e;
+    --accent:#60a5fa;
+    --c-sensor:#5eead4; --c-sensor-bg:#13302d;
+    --c-model:#93b4ff; --c-model-bg:#1a2540;
+    --c-fuse:#c4a8ff; --c-fuse-bg:#2a2140;
+    --c-out:#fbbf5d; --c-out-bg:#33270f;
+    --c-use:#7ddc9a; --c-use-bg:#15301f;
+    --ok:#4ade80; --mid:#facc15; --res:#f9a8d4; --warn:#f87171;
+    --edge:#454c57; --edge-hi:#60a5fa;
+  }
+}
+:root[data-theme="dark"]{
+    --bg:#121417; --card:#1b1e23; --fg:#e7e9ed; --muted:#9aa2ae; --line:#30353d; --soft:#23272e;
+    --accent:#60a5fa;
+    --c-sensor:#5eead4; --c-sensor-bg:#13302d;
+    --c-model:#93b4ff; --c-model-bg:#1a2540;
+    --c-fuse:#c4a8ff; --c-fuse-bg:#2a2140;
+    --c-out:#fbbf5d; --c-out-bg:#33270f;
+    --c-use:#7ddc9a; --c-use-bg:#15301f;
+    --ok:#4ade80; --mid:#facc15; --res:#f9a8d4; --warn:#f87171;
+    --edge:#454c57; --edge-hi:#60a5fa;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+header.top{padding:32px 16px 12px;max-width:1240px;margin:0 auto}
+h1{font-size:28px;line-height:1.25;margin:0 0 6px}
+h2{font-size:22px;margin:0 0 4px}
+h3{font-size:17px;margin:20px 0 8px}
+.sub{color:var(--muted);margin:0}
+main{max-width:1240px;margin:0 auto;padding:0 16px 64px}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin:18px 0}
+section > .lead{color:var(--muted);margin:2px 0 14px}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px;max-width:1240px;margin:0 auto;padding:0 16px}
+nav.toc a{font-size:13px;text-decoration:none;color:var(--fg);background:var(--card);border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+nav.toc a:hover{border-color:var(--accent);color:var(--accent)}
+.themebtn{float:right;font-size:13px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--card)}
+.card h4{margin:0 0 6px;font-size:15px}
+.card p{margin:4px 0}
+.card ul{margin:4px 0;padding-left:18px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.ref{color:var(--muted);font-size:12px}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px}
+pre{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto;font-size:13px;line-height:1.5}
+.chip{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);margin:2px 3px 2px 0;white-space:nowrap}
+.chip.k{border-color:var(--c-out);color:var(--c-out);background:var(--c-out-bg)}
+.chip.ok{border-color:var(--ok);color:var(--ok)}
+.chip.mid{border-color:var(--mid);color:var(--mid)}
+.chip.res{border-color:var(--res);color:var(--res)}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:0 6px;border-radius:4px;margin-left:4px;vertical-align:1px}
+.tag.p{background:color-mix(in srgb,var(--ok) 20%,transparent);color:var(--ok)}
+.tag.r{background:color-mix(in srgb,var(--res) 20%,transparent);color:var(--res)}
+.tag.m{background:color-mix(in srgb,var(--mid) 22%,transparent);color:var(--mid)}
+.notebox{border-left:4px solid var(--accent);background:var(--soft);padding:10px 14px;border-radius:6px;margin:10px 0}
+.warnbox{border-left:4px solid var(--warn);background:var(--soft);padding:10px 14px;border-radius:6px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:13px}
+td.c,th.c{text-align:center}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.dot{font-size:16px;line-height:1}
+.dot.f{color:var(--ok)} .dot.h{color:var(--mid)} .dot.n{color:var(--line)}
+
+/* level cards */
+.lvcards{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.lvcard{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--card);border-top:4px solid var(--lvc,var(--accent))}
+.lvcard .lv{font-weight:700;font-size:18px}
+.lvcard .who{font-size:12px;color:var(--muted);margin:2px 0 6px}
+.lvcard p{margin:4px 0;font-size:14px}
+.lvcard .new{margin-top:6px}
+
+/* level text */
+.lvdesc{display:grid;grid-template-columns:66px 1fr;gap:12px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.lvdesc p{margin:0 0 4px}
+.badge{background:var(--lvc);color:#fff;border-radius:8px;text-align:center;font-weight:700;font-size:14px;padding:10px 2px}
+.rl3{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+/* tech grid */
+.tg{display:grid;grid-template-columns:112px repeat(6,minmax(0,1fr));gap:6px;min-width:1080px}
+.tg .chev{min-height:48px}
+.tg .chev.first{clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%);padding-left:12px}
+.tg .rlab{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;padding:6px 8px;border-left:4px solid var(--rc);display:flex;align-items:center;background:var(--soft);border-radius:0 6px 6px 0}
+.tg .cell{border-radius:8px;padding:3px;font-size:12.5px;line-height:1.35;background:color-mix(in srgb,var(--lvc) 7%,transparent);border:1px solid color-mix(in srgb,var(--lvc) 25%,var(--line))}
+.tg .cell svg{width:100%;height:auto;display:block;max-width:190px;margin:0 auto}
+.ti{display:block;padding:4px 7px;margin:3px 0;border-radius:6px;border:1px solid var(--rc);border-left-width:4px;background:var(--rbg)}
+.ti.inh{border-style:dashed;border-left-width:1px;background:transparent;color:var(--muted);font-size:11.5px}
+.ti .k{font-weight:700;color:var(--c-out)}
+.r-sen{--rc:var(--c-sensor);--rbg:var(--c-sensor-bg)}
+.r-cmp{--rc:var(--muted);--rbg:var(--soft)}
+.r-mod{--rc:var(--c-model);--rbg:var(--c-model-bg)}
+.r-out{--rc:var(--c-out);--rbg:var(--c-out-bg)}
+.r-saf{--rc:var(--warn);--rbg:var(--card)}
+.r-cov{--rc:var(--line)}
+/* svg drawing */
+.car{fill:var(--card);stroke:var(--fg);stroke-width:1.5}
+.road{stroke:var(--line);stroke-width:1.5;stroke-dasharray:5 5}
+.cone{fill:color-mix(in srgb,var(--lvc) 28%,transparent);stroke:var(--lvc);stroke-width:1}
+.cone2{fill:color-mix(in srgb,var(--lvc) 14%,transparent);stroke:var(--lvc);stroke-width:1;stroke-dasharray:3 3}
+.eye{fill:var(--lvc)}
+.svgt{font-size:9px;fill:var(--muted);font-family:system-ui,sans-serif}
+
+/* diagram */
+.lvbar{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px;align-items:center}
+.lvbar button{font:inherit;font-size:13px;padding:5px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+.lvbar button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#dg{position:relative;min-width:1120px;display:grid;grid-template-columns:repeat(5,1fr);gap:0 46px;padding:8px 4px}
+#dg svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+#dg .col{display:flex;flex-direction:column;gap:7px;position:relative;z-index:1;justify-content:center}
+#dg .colh{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px;text-align:center}
+.nd{font-size:12.5px;line-height:1.3;padding:6px 8px;border-radius:8px;border:1px solid;cursor:pointer;transition:opacity .15s, box-shadow .15s;user-select:none}
+.nd .lvt{float:right;font-size:10px;font-weight:700;opacity:.75;margin-left:4px}
+.nd.s{border-color:var(--c-sensor);background:var(--c-sensor-bg)}
+.nd.m{border-color:var(--c-model);background:var(--c-model-bg)}
+.nd.f{border-color:var(--c-fuse);background:var(--c-fuse-bg)}
+.nd.o{border-color:var(--c-out);background:var(--c-out-bg)}
+.nd.u{border-color:var(--c-use);background:var(--c-use-bg)}
+.nd.off{opacity:.18}
+.nd.dim{opacity:.3}
+.nd.sel{box-shadow:0 0 0 2px var(--edge-hi)}
+path.e{fill:none;stroke:var(--edge);stroke-width:1.2;transition:opacity .15s}
+path.e.off{opacity:.06}
+path.e.hi{stroke:var(--edge-hi);stroke-width:2;opacity:1}
+path.e.dim{opacity:.1}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);margin:8px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid}
+#dginfo{min-height:44px}
+
+/* trl bar */
+.trl{display:flex;gap:2px;align-items:center}
+.trl i{display:block;width:12px;height:10px;border-radius:2px;background:var(--soft);border:1px solid var(--line)}
+.trl i.on{background:var(--accent);border-color:var(--accent)}
+.trl i.on2{background:color-mix(in srgb,var(--accent) 40%,transparent);border-color:var(--accent)}
+
+/* timeline */
+.tl{display:flex;gap:0;overflow-x:auto;padding:6px 0}
+.tl .st{flex:1 0 170px;border-top:3px solid var(--accent);padding:8px 10px 0;position:relative}
+.tl .st:before{content:"";position:absolute;top:-8px;left:8px;width:13px;height:13px;border-radius:50%;background:var(--card);border:3px solid var(--accent)}
+.tl .yr{font-size:12px;color:var(--muted);font-weight:600}
+.tl .nm{font-weight:700;margin:2px 0}
+.tl p{margin:2px 0;font-size:13px}
+
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:stretch}
+.fb{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--soft);font-size:13px;position:relative}
+.fb b{display:block;font-size:14px;margin-bottom:4px}
+.fb.per{border-color:var(--c-out);background:var(--c-out-bg)}
+.fb.pre{border-color:var(--c-fuse);background:var(--c-fuse-bg)}
+.fb.pla{border-color:var(--c-model);background:var(--c-model-bg)}
+.fb.con{border-color:var(--c-use);background:var(--c-use-bg)}
+.fb.saf{border-color:var(--warn)}
+.arrow{color:var(--muted);font-size:12px;margin:4px 0 0}
+.q{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;margin-right:6px}
+section.compact{padding:12px 20px}
+.terms{display:grid;grid-template-columns:max-content 1fr max-content 1fr;gap:4px 12px;margin:6px 0 0;font-size:13.5px}
+.terms dt{font-weight:700}.terms dd{margin:0;color:var(--muted)}
+@media(max-width:760px){.terms{grid-template-columns:max-content 1fr}}
+details.ref-table{margin-top:12px;border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+details.ref-table summary{cursor:pointer;font-weight:600;font-size:14px}
+ul.tight,ol.tight{margin:8px 0;padding-left:20px}ul.tight li,ol.tight li{margin:3px 0}
+table.arch td{font-size:13px}
+.lvdesc{padding:7px 0}
+.chev{background:var(--lvc);color:#fff;padding:7px 20px 7px 24px;font-weight:700;font-size:15px;line-height:1.2;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%,14px 50%);display:flex;flex-direction:column;justify-content:center}
+.chev small{font-weight:500;font-size:11.5px;opacity:.92}
+.rp{display:inline-block;padding:0 7px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;margin-left:2px}
+.rp.h{background:var(--soft);color:var(--fg);border:1px solid var(--line)}
+.rp.s{background:var(--lvc);color:#fff}
+.rp.x{background:color-mix(in srgb,var(--lvc) 35%,transparent);color:var(--fg)}
+#avtab td:nth-child(3){white-space:nowrap}
+.chip.fn{border-color:var(--c-use);color:var(--c-use);background:var(--c-use-bg)}
+.fnl{margin:2px 0 4px}
+.refs{font-size:13px;padding-left:22px;margin:8px 0}
+.refs li{margin:5px 0;word-break:break-word}
+.refs a{color:var(--accent)}
+.refs li:target{background:color-mix(in srgb,var(--accent) 15%,transparent);border-radius:4px}
+a.cite{color:var(--accent);text-decoration:none}a.cite:hover{text-decoration:underline}
+tr.grp td{background:var(--soft);font-weight:700;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.gl{margin-top:8px;padding-top:6px;border-top:1px dashed var(--line)}
+.gl ul{margin:4px 0 0;padding-left:18px}.gl li{margin:2px 0}
+.dchip{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:6px;border:1px solid var(--line);margin:1px 3px 1px 0;white-space:nowrap;background:var(--soft)}
+.d-pre{border-color:var(--c-fuse);background:var(--c-fuse-bg);color:var(--c-fuse)}
+.d-pla{border-color:var(--c-model);background:var(--c-model-bg);color:var(--c-model)}
+.d-con{border-color:var(--c-use);background:var(--c-use-bg);color:var(--c-use)}
+.d-saf{border-color:var(--warn);color:var(--warn);background:var(--card)}
+/* fig 6 */
+.fig6wrap{margin:14px 0 6px}
+.fig6{width:100%;min-width:760px;height:auto;display:block}
+.fig6 text{fill:var(--fg);font:13px system-ui,-apple-system,"Segoe UI",sans-serif}
+.fig6 .ttl{font-weight:600;font-size:14px}
+.fig6 .mut{fill:var(--muted);font-size:12px}
+.fig6 .mth{font-style:italic;font-family:"Times New Roman",serif;font-size:15px}
+.fig6 .ctn{fill:var(--soft);stroke:var(--line);stroke-width:1.2}
+.fig6 .bx{fill:var(--card);stroke:var(--edge);stroke-width:1.2}
+.fig6 .bx.per{fill:var(--c-out-bg);stroke:var(--c-out)}
+.fig6 .bx.pol{fill:var(--c-model-bg);stroke:var(--c-model)}
+.fig6 .bx.wm{fill:var(--c-fuse-bg);stroke:var(--c-fuse)}
+.fig6 .ar{stroke:var(--fg);stroke-width:1.6;fill:none}
+.fig6 .ar.wm{stroke:var(--c-fuse);stroke-dasharray:5 4}
+.fig6 .mk{fill:var(--fg)} .fig6 .mk.wm{fill:var(--c-fuse)}
+.fig6 .ink{stroke:var(--fg);fill:none;stroke-width:2.2}
+.fig6 .pedal{fill:var(--card);stroke:var(--fg);stroke-width:1.5}
+.fig6 .sky{fill:var(--c-sensor-bg);stroke:var(--edge)}
+figcaption.cap{font-size:13px;color:var(--muted);margin-top:6px}
+.opinion{border-left:3px solid var(--accent);background:var(--soft);padding:10px 16px;border-radius:8px;margin:14px 0}
+.opinion > .olab{display:inline-block;font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+
+.sitebar{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin:0 0 10px}
+.sitebar a{color:var(--accent);text-decoration:none}.sitebar a:hover{text-decoration:underline}
+.printnote{display:none}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  html,body{background:#fff!important}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .themebtn,.sitebar,.lvbar,#dginfo,nav.toc{display:none!important}
+  .printnote{display:block;font-size:12px;color:var(--muted);margin:4px 0 0}
+  header.top{padding-top:0}
+  main{padding-bottom:0}
+  section{break-inside:auto;margin:10px 0}
+  h2,h3{break-after:avoid}
+  tr,figure,.lvdesc,.opinion,.flow,.tl{break-inside:avoid}
+  .scrollx{overflow:visible!important}
+  #diagram{break-before:page}
+  .scrollx:has(#dg){break-inside:avoid}
+  #dg{transform:scale(.9);transform-origin:0 0;margin-bottom:-30px}
+  .tl{flex-wrap:wrap;overflow:visible}.tl .st{flex:1 0 140px}
+  a{color:var(--accent)}
+}
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <button class="themebtn" id="themebtn" type="button">Sáng / Tối</button>
+  <div class="sitebar"><a href="/">← Lê Tuân</a><a href="/#blog">Blog</a><a href="/files/perception_outputs_vi.pdf">Tải bản PDF</a></div>
+  <h1>Yêu cầu đầu ra của hệ thống nhận thức cho xe tự hành</h1>
+  <p class="printnote">Bản PDF tĩnh. Bản tương tác (chọn cấp độ, bấm vào sơ đồ): https://nautel.github.io/perception_outputs_vi.html</p>
+</header>
+<nav class="toc">
+  <a href="#intro">Mở đầu</a><a href="#levels">1. Cấp độ</a><a href="#diagram">2. Sơ đồ tổng hợp</a><a href="#arch">3. Kiến trúc các hãng</a><a href="#generic">4. Đầu ra chung</a><a href="#av">5. Đầu ra bắt buộc</a><a href="#end">6. Nhận thức cho world model</a><a href="#refs">Tài liệu tham khảo</a>
+</nav>
+<main>
+
+<section id="intro">
+  <h2>Mở đầu</h2>
+  <p>Xe tự hành được chia thành nhiều cấp độ, và mỗi cấp độ yêu cầu những khả năng khác nhau: từ hỗ trợ phanh, giữ làn ở L0–L1 đến tự lái hoàn toàn trong một vùng hoạt động ở L4 (chi tiết ở <a href="#levels">phần 1</a>).</p>
+  <p>Để có những khả năng đó, mỗi cấp độ cần đầu vào (cảm biến), mô hình, cách hợp nhất dữ liệu khác nhau, và từ đó tạo ra thông tin đầu ra khác nhau. <a href="#diagram">Phần 2</a> tổng hợp chuỗi này trong một sơ đồ: Cảm biến → Mô hình → Hợp nhất → Đầu ra → Nơi sử dụng.</p>
+  <p>Các hãng xe hiện nay cũng có những lựa chọn khác nhau cho xe của mình, cả ở hoạt động thực tế (sản xuất, chạy trên đường) lẫn ở hoạt động nghiên cứu, với mức độ trưởng thành công nghệ khác nhau (<a href="#arch">phần 3</a>).</p>
+  <p>Tuy nhiên, nhìn từ góc độ tổng quát, đầu ra của một hệ thống nhận thức cho robot nói chung và xe tự hành nói riêng đều phải trả lời được một số câu hỏi cốt lõi: <i>Có gì quanh tôi? Chỗ nào đi được? Vật đó sẽ đi đâu? Luật nào áp dụng? Tôi tin kết quả đến mức nào?</i>… (<a href="#generic">phần 4</a>).</p>
+  <p>Cuối cùng, <a href="#av">phần 5</a> đi vào chi tiết: một hệ thống xe tự hành cần những thông tin gì từ khối nhận thức, thông tin đó được gửi đến bước nào (dự đoán, lập kế hoạch, điều khiển, giám sát an toàn), và bước đó dùng nó để làm gì.</p>
+  <p><a href="#end">Phần 6</a> trình bày quan điểm của tác giả về hướng đi hiện tại: từ hệ thống mô-đun sang end-to-end, nhu cầu về world model để học tăng cường, và hệ thống nhận thức tạo ra intermediate representation cho policy.</p>
+</section>
+
+<section id="terms" class="compact">
+  <h2>Thuật ngữ</h2>
+  <dl class="terms">
+    <dt>ODD</dt><dd>Vùng hoạt động thiết kế: loại đường, tốc độ, thời tiết, ánh sáng.</dd>
+    <dt>OEDR</dt><dd>Phát hiện vật thể, sự kiện và phản ứng.</dd>
+    <dt>MRM / MRC</dt><dd>Thao tác về trạng thái rủi ro tối thiểu / trạng thái đó.</dd>
+    <dt>Track</dt><dd>Vật thể có ID ổn định, vị trí, vận tốc, độ bất định.</dd>
+    
+    <dt><span class="tag p">P</span> <span class="tag m">P/R</span> <span class="tag r">R</span></dt><dd>Practical (chạy trên xe / Autoware, Apollo) · một phần · Research (chưa có chuẩn).</dd>
+  </dl>
+</section>
+
+<!-- ================= 1 ================= -->
+<section id="levels">
+  <h2>1. Cấp độ tự lái và chức năng</h2>
+
+  
+  <p>Phần này chia xe tự lái thành 5 nhóm, từ L0 đến L4. Mỗi nhóm có mọi khả năng của nhóm trước và thêm khả năng mới.</p>
+  <div class="lvdesc" style="--lvc:#6b7280"><div class="badge">L0–L1</div><div>
+    <p><b>Hỗ trợ lái cơ bản.</b> Hệ thống hỗ trợ người lái bằng 4 chức năng: phanh khẩn cấp tự động (<b>AEB</b>), cảnh báo va chạm phía trước (<b>FCW</b>), hỗ trợ giữ làn (<b>LKA</b>), giữ tốc độ và khoảng cách an toàn (<b>ACC</b>). Ở L1, hệ thống chỉ điều khiển một hướng: dọc (ACC) hoặc ngang (LKA). Người lái lái xe và giám sát đường mọi lúc. FMVSS 127 yêu cầu AEB hoạt động ở 10–145 km/h [<a class="cite" href="#ref-FMVSS127">FMVSS127</a>].</p>
+    <p class="fnl"><span class="small muted">Chức năng:</span> <span class="chip fn">AEB</span><span class="chip fn">FCW</span><span class="chip fn">LKA</span><span class="chip fn">ACC</span></p>
+    <p class="rl3"><span>Lái <span class="rp x">Người / một hướng</span></span><span>Giám sát <span class="rp h">Người</span></span><span>Dự phòng <span class="rp h">Người</span></span></p></div></div>
+  <div class="lvdesc" style="--lvc:#0284c7"><div class="badge">L2–L2+</div><div>
+    <p><b>Tự động một phần.</b> Hệ thống điều khiển cả hướng dọc và hướng ngang. Người lái vẫn giám sát đường và chịu trách nhiệm. Vì vậy hệ thống phải giám sát người lái (<b>DMS</b>) và cảnh báo khi cảm biến bị che hoặc suy giảm tín hiệu. Hệ thống phải tránh va chạm với: vật đứng yên (khi chạy thẳng và khi vào cua), xe phía trước phanh gấp, xe làn bên cắt vào làn của ego (<b>cut-in</b>), và vật lộ ra khi xe phía trước chuyển sang làn khác (<b>cut-out</b>) [<a class="cite" href="#ref-R171">R171</a>, <a class="cite" href="#ref-EuroNCAP-AD">EuroNCAP-AD</a>].</p>
+    <p class="fnl"><span class="small muted">Chức năng:</span> <span class="chip fn">DMS</span><span class="chip fn">Cảnh báo cảm biến bị che</span><span class="chip fn">Tránh va chạm: vật đứng yên, xe phanh, cut-in/out</span></p>
+    <p class="rl3"><span>Lái <span class="rp s">Hệ thống</span></span><span>Giám sát <span class="rp h">Người</span></span><span>Dự phòng <span class="rp h">Người</span></span></p></div></div>
+  <div class="lvdesc" style="--lvc:#2563eb"><div class="badge">L2++</div><div>
+    <p><b>Lái theo tuyến (NOA), từ cao tốc vào đô thị.</b> Hệ thống có mọi khả năng của L2 và mở rộng phạm vi vào đô thị đông người. Hệ thống phải dựng <b>bản đồ online và topology</b> (quan hệ giữa làn, vạch dừng, đèn). Hệ thống phải đọc <b>đèn giao thông và biển báo</b>, và bảo vệ <b>VRU</b> (người đi bộ, xe đạp, xe máy). Về pháp lý, L2++ vẫn là L2: người lái chịu trách nhiệm.</p>
+    <p class="fnl"><span class="small muted">Chức năng:</span> <span class="chip fn">NOA cao tốc → đô thị</span><span class="chip fn">Tuân thủ đèn / biển báo</span><span class="chip fn">Bảo vệ VRU đô thị</span></p>
+    <p class="rl3"><span>Lái <span class="rp s">Hệ thống</span></span><span>Giám sát <span class="rp h">Người</span></span><span>Dự phòng <span class="rp h">Người</span></span></p></div></div>
+  <div class="lvdesc" style="--lvc:#7c3aed"><div class="badge">L3</div><div>
+    <p><b>Tự động có điều kiện.</b> Trong ODD, hệ thống lái xe và giám sát đường; người lái là dự phòng (fallback). UN R157 đặt yêu cầu định lượng. <b>Phía trước:</b> tầm phát hiện tăng theo tốc độ, giả định phanh 5 m/s²: 46 m ở 60 km/h, 150 m ở 130 km/h. <b>Hai bên:</b> phủ làn trái và làn phải; khi đổi làn, phủ ít nhất 9 m về phía đổi làn. <b>Phía sau:</b> phủ 9 m về phía đổi làn. Hệ thống phải tự đánh giá tầm phát hiện thực tế và giảm tốc độ theo tầm đó. Khi hệ thống yêu cầu tiếp quản, cảnh báo leo thang sau 4 s. Nếu người lái không tiếp quản, hệ thống thực hiện MRM, sớm nhất 10 s sau yêu cầu [<a class="cite" href="#ref-R157">R157</a>].</p>
+    <p class="fnl"><span class="small muted">Chức năng:</span> <span class="chip fn">Lái có điều kiện (ALKS)</span><span class="chip fn">Yêu cầu tiếp quản (4 s)</span><span class="chip fn">MRM → MRC</span></p>
+    <p class="rl3"><span>Lái <span class="rp s">Hệ thống</span></span><span>Giám sát <span class="rp s">Hệ thống</span></span><span>Dự phòng <span class="rp h">Người</span></span></p></div></div>
+  <div class="lvdesc" style="--lvc:#be185d"><div class="badge">L4</div><div>
+    <p><b>Tự động cao.</b> Trong ODD, hệ thống làm toàn bộ việc lái (<b>DDT</b>): điều khiển dọc, điều khiển ngang, phát hiện vật thể và sự kiện rồi phản ứng (OEDR). Hệ thống phải <b>phát hiện khi xe ra khỏi ODD</b>. Khi không thể tiếp tục, hệ thống tự đưa xe về <b>trạng thái rủi ro tối thiểu (MRC)</b>. Xe không cần người lái. Quy định L4 dựa trên quy trình (safety case, ghi dữ liệu), không có con số cho nhận thức [<a class="cite" href="#ref-EU-2022-1426">EU-2022-1426</a>, <a class="cite" href="#ref-UN-ADS-2026">UN-ADS-2026</a>].</p>
+    <p class="fnl"><span class="small muted">Chức năng:</span> <span class="chip fn">DDT đầy đủ trong ODD</span><span class="chip fn">Phát hiện ra khỏi ODD</span><span class="chip fn">Hỗ trợ từ xa</span></p>
+    <p class="rl3"><span>Lái <span class="rp s">Hệ thống</span></span><span>Giám sát <span class="rp s">Hệ thống</span></span><span>Dự phòng <span class="rp s">Hệ thống</span></span></p></div></div>
+  <details class="ref-table" open>
+    <summary>Bảng tra K1–K14: mức yêu cầu theo cấp và căn cứ</summary>
+    <p class="legend"><span><b class="dot f">●</b> bắt buộc</span><span><b class="dot h">◐</b> thường có</span><span><b class="dot n">○</b> không cần</span></p>
+    <div class="scrollx"><table id="mx"><tr><th>Mã</th><th>Khả năng</th><th class="c">L0–L1</th><th class="c">L2</th><th class="c">L2++</th><th class="c">L3</th><th class="c">L4</th><th>Căn cứ</th></tr></table></div>
+  </details>
+</section>
+
+<!-- ================= 2 ================= -->
+<section id="diagram">
+  <h2>2. Sơ đồ tổng hợp: Cảm biến → Mô hình → Hợp nhất → Đầu ra → Dùng cho</h2>
+  <p class="lead">Cột “Dùng cho” là các chức năng ở §1. Chọn cấp độ: khối không cần sẽ mờ. Bấm một khối để xem chuỗi trước và sau nó, căn cứ và nghĩa của thuật ngữ.</p>
+  <div class="lvbar" id="lvbar">
+    <span class="small muted">Cấp độ:</span>
+    <button data-l="0">L0–L1</button><button data-l="1">L2</button><button data-l="2">L2++ / NOA</button><button data-l="3">L3</button><button data-l="4" class="on">L4</button>
+  </div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--c-sensor-bg);border-color:var(--c-sensor)"></i>Cảm biến</span>
+    <span><i class="sw" style="background:var(--c-model-bg);border-color:var(--c-model)"></i>Mô hình</span>
+    <span><i class="sw" style="background:var(--c-fuse-bg);border-color:var(--c-fuse)"></i>Hợp nhất, tracking</span>
+    <span><i class="sw" style="background:var(--c-out-bg);border-color:var(--c-out)"></i>Đầu ra (K)</span>
+    <span><i class="sw" style="background:var(--c-use-bg);border-color:var(--c-use)"></i>Khối dùng</span>
+    <span class="small">Nhãn góc = cấp đầu tiên cần khối đó</span>
+  </div>
+  <div class="scrollx"><div id="dg"><svg id="dgsvg"></svg></div></div>
+  <div id="dginfo" class="notebox small">Bấm một khối để xem chi tiết.</div>
+  <p class="small"><b>Vì sao có kênh hình học song song?</b> Detector học máy chỉ thấy lớp đã học. Kênh hình học (ground segmentation, clustering, occupancy grid) thấy mọi vật có thể tích. Autoware, Apollo, Aurora đều dùng kênh này; Mobileye dùng hai kênh độc lập [<a class="cite" href="#ref-Autoware">Autoware</a>, <a class="cite" href="#ref-Apollo">Apollo</a>, <a class="cite" href="#ref-Aurora-Perception">Aurora-Perception</a>, <a class="cite" href="#ref-Mobileye-TrueRed">Mobileye-TrueRed</a>].</p>
+</section>
+
+<!-- ================= 3 ================= -->
+<section id="arch">
+  <h2>3. Kiến trúc các hãng và độ trưởng thành</h2>
+  <p class="lead">Điểm khác chính giữa các hãng: hệ thống có giữ đầu ra có cấu trúc (objects, map) hay không.</p>
+  <div class="tl">
+    <div class="st"><div class="yr">2019–21</div><div class="nm">Detector riêng</div><p>PointPillars, CenterPoint</p></div>
+    <div class="st"><div class="yr">2022</div><div class="nm">BEV</div><p>BEVFormer, BEVFusion</p></div>
+    <div class="st"><div class="yr">2023</div><div class="nm">Sparse + thời gian</div><p>StreamPETR, Sparse4Dv3</p></div>
+    <div class="st"><div class="yr">2023–24</div><div class="nm">Occupancy, map online</div><p>FlashOcc, MapTRv2</p></div>
+    <div class="st"><div class="yr">2023–25</div><div class="nm">End-to-end</div><p>UniAD, SparseDrive, FSD v12+</p></div>
+    <div class="st"><div class="yr">2025–26</div><div class="nm">VLA, world model</div><p>EMMA, Alpamayo-R1, MindVLA</p></div>
+  </div>
+
+  <div class="scrollx"><table class="arch">
+    <tr><th>Nhóm</th><th>Hãng</th><th>Cảm biến</th><th>Nhận thức</th><th>Đầu ra cấu trúc</th><th>Cấp</th><th>Trưởng thành</th></tr>
+    <tr><td><b>A. Model nền đa cảm biến</b></td><td>Waymo, Zoox, Baidu, Pony, WeRide, Aurora</td><td>11–14 cam, 4–9 LiDAR, 4–9 radar, mic</td><td>Một model nền hợp nhất; teacher → student</td><td class="c"><b class="dot f">●</b> giữ để kiểm chứng</td><td>L4</td><td><span class="chip ok">TRL 9 trong ODD</span><br><span class="small muted">Waymo &gt;300M dặm [<a class="cite" href="#ref-Alphabet-Q3-26">Alphabet-Q3-26</a>]</span></td></tr>
+    <tr><td><b>B. Hai kênh độc lập</b></td><td>Mobileye (SuperVision, Drive)</td><td>Kênh camera + kênh radar/LiDAR</td><td>Mỗi kênh một world model; RSS chọn</td><td class="c"><b class="dot f">●</b></td><td>L2+ · L4</td><td><span class="chip ok">9 ở L2+</span> <span class="chip mid">7 ở L4</span></td></tr>
+    <tr><td><b>C. E2E chỉ camera</b></td><td>Tesla FSD v14, XPeng VLA 2.0</td><td>8 camera; không LiDAR, không HD map</td><td>Một mạng pixel → điều khiển</td><td class="c"><b class="dot h">◐</b> token trung gian</td><td>L2 · L4 thí điểm</td><td><span class="chip ok">9 ở L2</span> <span class="chip mid">6–7 không người lái</span></td></tr>
+    <tr><td><b>D. E2E / VLA, LiDAR tùy chọn</b></td><td>Li Auto, Huawei, Momenta, Horizon, Wayve, NVIDIA</td><td>Nhiều camera + radar, ± 1 LiDAR</td><td>E2E/VLA + RL; Huawei: world-action</td><td class="c"><b class="dot h">◐</b></td><td>L2 NOA</td><td><span class="chip ok">7–9 ở L2</span> <span class="chip res">4–6 VLA ở L4</span></td></tr>
+    <tr><td><b>L3 xe cá nhân</b></td><td>Mercedes, BMW, Honda, TQ</td><td>Như L2++ + LiDAR + HD map</td><td>Fusion + kênh dự phòng</td><td class="c"><b class="dot f">●</b></td><td>L3</td><td><span class="chip ok">9 kỹ thuật</span> <span class="chip res">thương mại lùi</span><br><span class="small muted">Mercedes, BMW ngừng 2026 [<a class="cite" href="#ref-L3-Exit-2026">L3-Exit-2026</a>]</span></td></tr>
+  </table></div>
+  <ul class="small tight">
+    <li><b>Ít cảm biến hơn, cảm biến tốt hơn:</b> Waymo thế hệ 6 giảm 42% số cảm biến; camera 17MP, radar 4D, FMCW LiDAR 450–1.000 m [<a class="cite" href="#ref-Waymo-6G-press">Waymo-6G-press</a>, <a class="cite" href="#ref-Aurora-Gen2">Aurora-Gen2</a>].</li>
+    <li><b>Nhận thức thành ẩn ở L2</b>, nhưng mọi L4 thu phí lớn vẫn giữ đầu ra có cấu trúc [<a class="cite" href="#ref-Waymo-WFM">Waymo-WFM</a>].</li>
+    <li><b>Đánh giá theo an toàn:</b> NDS-USC tương quan 0,925 với va chạm, mAP chỉ 0,699 [<a class="cite" href="#ref-NDS-USC">NDS-USC</a>].</li>
+  </ul>
+
+  <h3>Độ trưởng thành từng công nghệ (TRL 1–9)</h3>
+  <div class="scrollx"><table id="trl"><tr><th>Công nghệ</th><th>TRL</th><th></th><th>Căn cứ</th></tr></table></div>
+</section>
+
+<!-- ================= 4 ================= -->
+<section id="generic">
+  <h2>4. Đầu ra chung cho hệ thống nhận thức của robot</h2>
+  <div class="scrollx"><table>
+    <tr><th>#</th><th>Câu hỏi</th><th>Đầu ra tối thiểu</th><th>Quy tắc bắt buộc</th><th>Xe</th></tr>
+    <tr><td><span class="q">1</span></td><td>Có gì quanh tôi?</td><td>Danh sách vật thể: lớp, vị trí, kích thước</td><td>Phải có lớp UNKNOWN</td><td class="small">K1 K2 K7</td></tr>
+    <tr><td><span class="q">2</span></td><td>Chỗ nào đi được?</td><td>Occupancy / freespace</td><td>“Chưa biết” khác “trống”</td><td class="small">K12</td></tr>
+    <tr><td><span class="q">3</span></td><td>Vật đó sẽ đi đâu?</td><td>Track (vận tốc, gia tốc) + quỹ đạo dự đoán</td><td>ID không đổi khi lớp đổi</td><td class="small">K5 K7 K13</td></tr>
+    <tr><td><span class="q">4</span></td><td>Luật nào áp dụng?</td><td>Cấu trúc (làn, topology) + tín hiệu (đèn, biển)</td><td>Tín hiệu gán vào cấu trúc</td><td class="small">K3 K8 K9 K14</td></tr>
+    <tr><td><span class="q">5</span></td><td>Tin kết quả bao nhiêu?</td><td>Covariance, existence prob, prob lớp</td><td>Phải calib; sai còn tệ hơn không có [<a class="cite" href="#ref-ClassUnc">ClassUnc</a>]</td><td class="small">K10</td></tr>
+    <tr><td><span class="q">6</span></td><td>Tôi còn thấy tốt không?</td><td>Sức khỏe cảm biến, tầm phát hiện thực tế</td><td>Tự phát hiện suy giảm</td><td class="small">K4</td></tr>
+    <tr><td><span class="q">7</span></td><td>Tôi còn trong ODD không?</td><td>Cờ ODD</td><td>Ra khỏi ODD → giảm chức năng / MRM</td><td class="small">K11</td></tr>
+    <tr><td><span class="q">8</span></td><td>Kết quả của lúc nào?</td><td>Timestamp thu + xuất</td><td>Latency p99 bị chặn [<a class="cite" href="#ref-P-AP">P-AP</a>]</td><td class="small">mọi K</td></tr>
+    <tr><td><span class="q">9</span></td><td>Tôi ở đâu?</td><td>Pose ego (vị trí, hướng, vận tốc) trong khung bản đồ + covariance</td><td>Cùng khung tọa độ và đồng bộ thời gian với mọi đầu ra khác</td><td class="small">Định vị → Planning, Control</td></tr>
+  </table></div>
+</section>
+
+<!-- ================= 5 ================= -->
+<section id="av">
+  <h2>5. Đầu ra bắt buộc từ perception của xe tự lái và nơi nhận</h2>
+  <div class="flow">
+    <div class="fb per"><b>Nhận thức</b>Objects, track, map, đèn, occupancy, tự đánh giá, cờ ODD</div>
+    <div class="fb pre"><b>Prediction</b>Track + map → quỹ đạo đa mode</div>
+    <div class="fb pla"><b>Planning</b>Mọi đầu ra + dự đoán + trạng thái ego → quỹ đạo xe</div>
+    <div class="fb con"><b>Control</b>Quỹ đạo + trạng thái ego → lái, ga, phanh</div>
+    <div class="fb saf"><b>Giám sát an toàn</b>Sức khỏe cảm biến, ODD, bất định → MRM / tiếp quản</div>
+  </div>
+
+  <h3>Bảng đầu ra bắt buộc</h3>
+  <div class="lvbar" id="lvbar2">
+    <span class="small muted">Cấp mục tiêu:</span>
+    <button data-l="0">L0–L1</button><button data-l="1">L2</button><button data-l="2">L2++ / NOA</button><button data-l="3">L3</button><button data-l="4" class="on">L4</button>
+    <span class="small muted" id="avcount"></span>
+  </div>
+  <div class="scrollx"><table id="avtab">
+    <tr><th>#</th><th>Trường dữ liệu</th><th>Từ cấp</th><th>Gửi đến</th><th>Practical: chạy được</th><th>Research: chưa xong</th></tr>
+  </table></div>
+</section>
+
+<!-- ================= 6 ================= -->
+<section id="end">
+  <h2>6. Hệ thống nhận thức cho world model</h2>
+  <p class="lead">Phần này trình bày quan điểm cá nhân của tác giả về hướng đi hiện tại của ngành.</p>
+
+  <h3>Từ hệ thống mô-đun đến end-to-end</h3>
+  <p>Các hệ thống xe tự hành đầu tiên được thiết kế từ nhiều mô-đun riêng: nhận thức, dự đoán, lập kế hoạch, điều khiển (phần 1–5). Hệ thống này phức tạp, tốn nhiều công sức để huấn luyện và tinh chỉnh. Cách làm này dễ kiểm chứng, vì mỗi khối có đầu ra rõ ràng, nhưng mỗi khối lại cần nhiều kiến thức chuyên gia và phải tinh chỉnh riêng.</p>
+  <p>Vì vậy, các hãng xe chuyển sang <b>end-to-end (E2E)</b>: một mạng học trực tiếp từ cảm biến ra hành động. Mạng thường được huấn luyện trước bằng học bắt chước từ dữ liệu lái của người, sau đó tinh chỉnh bằng <b>học tăng cường (RL)</b> [<a class="cite" href="#ref-Tesla-v14">Tesla-v14</a>, <a class="cite" href="#ref-XPeng-AIDay25">XPeng-AIDay25</a>, <a class="cite" href="#ref-Li-MindVLA">Li-MindVLA</a>].</p>
+
+  <h3>Học tăng cường cần môi trường, từ đó cần world model</h3>
+  <p>Vấn đề của học tăng cường là robot phải được huấn luyện qua rất nhiều kịch bản khác nhau mới học được. Trên đường thật, cách này vừa chậm vừa nguy hiểm, và các tình huống hiếm gần như không lặp lại. Bộ mô phỏng viết tay thì khác xa thế giới thật. Từ đó nảy sinh nhu cầu tạo ra một <b>môi trường mà robot có thể học trong đó</b>, và ngành hướng tới phát triển <b>world model</b>: mô hình học được cách thế giới thay đổi theo hành động của xe [<a class="cite" href="#ref-Waymo-WorldModel">Waymo-WorldModel</a>, <a class="cite" href="#ref-GAIA-3">GAIA-3</a>, <a class="cite" href="#ref-Cosmos">Cosmos</a>, <a class="cite" href="#ref-Tesla-E2E-talk">Tesla-E2E-talk</a>]. Ý tưởng "học trong tưởng tượng" này đã được chứng minh trong RL tổng quát [<a class="cite" href="#ref-DreamerV3">DreamerV3</a>] và trong lái xe mô phỏng [<a class="cite" href="#ref-MILE">MILE</a>, <a class="cite" href="#ref-Think2Drive">Think2Drive</a>].</p>
+  <p>Chính vì vậy, cách tiếp cận truyền thống theo kiểu mô-đun, bắt đầu bằng khối <i>low-level perception</i> (Hình 6.1-A), đang dần được thay thế. Hệ thống nhận thức mới đưa ra một dạng thông tin trung gian, gọi là <b>intermediate representation</b>, và <b>policy</b> (chính sách lái) học cách điều khiển từ thông tin này. World model cũng dự đoán tương lai trên cùng dạng thông tin đó.</p>
+  <figure class="fig6wrap"><div class="scrollx"><svg class="fig6" viewBox="0 0 1000 640" role="img" aria-label="So sánh ba cách tiếp cận: pipeline mô-đun, end-to-end, và nhận thức tạo intermediate representation cho policy học trong world model"><defs>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0 0L10 5L0 10z"/></marker>
+  <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk wm" d="M0 0L10 5L0 10z"/></marker>
+  <symbol id="cam6" viewBox="0 0 130 80" width="130" height="80">
+    <rect style="fill:var(--c-sensor-bg);stroke:var(--edge)" x="0.5" y="0.5" width="129" height="79" rx="4"/>
+    <path d="M10 80 L58 34 L72 34 L125 80 Z" fill="#6b6f78"/>
+    <path d="M65 36 L62 80" stroke="#facc15" stroke-width="2" stroke-dasharray="6 4"/>
+    <rect x="22" y="44" width="22" height="13" rx="3" fill="#3b82f6"/>
+    <circle cx="92" cy="40" r="3.5" fill="#ec4899"/><path d="M92 44 L92 56 M92 56 L88 64 M92 56 L96 64 M87 48 L97 48" stroke="#ec4899" stroke-width="2"/>
+    <rect x="104" y="12" width="7" height="18" rx="2" fill="#374151"/><circle cx="107.5" cy="17" r="2.3" fill="#ef4444"/>
+  </symbol>
+  <symbol id="ctl6" viewBox="0 0 125 92" width="125" height="92">
+    <circle style="stroke:var(--fg);fill:none;stroke-width:2.2" cx="62" cy="20" r="16"/><circle style="stroke:var(--fg);fill:none;stroke-width:2.2" cx="62" cy="20" r="4"/>
+    <path style="stroke:var(--fg);fill:none;stroke-width:2.2" d="M46 20 L58 20 M66 20 L78 20 M62 24 L62 36"/>
+    <rect style="fill:var(--card);stroke:var(--fg);stroke-width:1.5" x="22" y="48" width="22" height="30" rx="3"/>
+    <rect style="fill:var(--card);stroke:var(--fg);stroke-width:1.5" x="80" y="56" width="26" height="22" rx="4"/>
+    <text x="33" y="91" text-anchor="middle" style="font-size:11px;fill:var(--fg);font-family:system-ui,sans-serif">Ga</text>
+    <text x="93" y="91" text-anchor="middle" style="font-size:11px;fill:var(--fg);font-family:system-ui,sans-serif">Phanh</text>
+    <text x="100" y="14" style="font-size:11px;fill:var(--fg);font-family:system-ui,sans-serif">Lái</text>
+  </symbol>
+  <symbol id="abs6" viewBox="0 0 150 80" width="150" height="80">
+    <rect x="0.5" y="0.5" width="149" height="79" rx="4" fill="#9ca3af"/>
+    <path d="M0 80 L0 60 L70 22 L95 22 L150 80 Z" fill="#e5e7eb"/>
+    <path d="M18 80 L78 24" stroke="#eab308" stroke-width="2.5"/>
+    <ellipse cx="80" cy="42" rx="14" ry="7" fill="#60a5fa"/>
+    <ellipse cx="44" cy="40" rx="4" ry="9" fill="#f9a8d4"/>
+    <ellipse cx="118" cy="14" rx="4" ry="8" fill="#f87171"/>
+  </symbol>
+</defs><rect class="ctn" x="180" y="40" width="655" height="112" rx="12"/><text class="ttl" x="196" y="62">A. Modular pipeline (step by step)</text><rect class="bx per" x="198" y="81" width="140" height="46" rx="8"/><text x="268.0" y="100.5" text-anchor="middle">Low-level</text><text x="268.0" y="116.5" text-anchor="middle">perception</text><rect class="bx per" x="358" y="81" width="140" height="46" rx="8"/><text x="428.0" y="100.5" text-anchor="middle">Scene</text><text x="428.0" y="116.5" text-anchor="middle">parsing</text><path class="ar" d="M338 104 L356 104" marker-end="url(#a6)"/><rect class="bx" x="518" y="81" width="140" height="46" rx="8"/><text x="588.0" y="100.5" text-anchor="middle">Path</text><text x="588.0" y="116.5" text-anchor="middle">planning</text><path class="ar" d="M498 104 L516 104" marker-end="url(#a6)"/><rect class="bx" x="678" y="81" width="140" height="46" rx="8"/><text x="748.0" y="100.5" text-anchor="middle">Vehicle</text><text x="748.0" y="116.5" text-anchor="middle">control</text><path class="ar" d="M658 104 L676 104" marker-end="url(#a6)"/><path class="ar" d="M152 104 L196 104" marker-end="url(#a6)"/><path class="ar" d="M818 104 L856 104" marker-end="url(#a6)"/><text class="mut" x="196" y="142">Mỗi khối cần kiến thức chuyên gia và tinh chỉnh riêng; dễ kiểm chứng</text><text x="85" y="56" text-anchor="middle" class="mut">Cảm biến</text><use href="#cam6" x="20" y="64"/><use href="#ctl6" x="858" y="58"/><rect class="ctn" x="180" y="190" width="655" height="112" rx="12"/><text class="ttl" x="196" y="212">B. End-to-end: học bắt chước (IL) / học tăng cường (RL)</text><rect class="bx pol" x="438" y="231" width="140" height="46" rx="8"/><text x="508.0" y="250.5" text-anchor="middle">Neural</text><text x="508.0" y="266.5" text-anchor="middle">network</text><path class="ar" d="M152 254 L436 254" marker-end="url(#a6)"/><path class="ar" d="M578 254 L856 254" marker-end="url(#a6)"/><text class="mut" x="196" y="292">Ít thiết kế thủ công, nhưng là hộp đen; RL cần rất nhiều kịch bản để học</text><text x="85" y="206" text-anchor="middle" class="mut">Cảm biến</text><use href="#cam6" x="20" y="214"/><use href="#ctl6" x="858" y="208"/><rect class="ctn" x="180" y="340" width="655" height="282" rx="12"/><text class="ttl" x="196" y="362">C. Nhận thức → intermediate representation → policy, học trong world model</text><rect class="bx per" x="198" y="393" width="130" height="46" rx="8"/><text x="263.0" y="420.5" text-anchor="middle">Perception</text><text class="mth" x="263" y="386" text-anchor="middle">a<tspan baseline-shift="sub" style="font-size:11px">ψ</tspan></text><use href="#abs6" x="368" y="376"/><text x="443" y="474" text-anchor="middle">Intermediate representation <tspan class="mth">r</tspan></text><text class="mut" x="443" y="490" text-anchor="middle">đường, làn, xe, người, đèn (BEV / occupancy)</text><rect class="bx pol" x="560" y="393" width="130" height="46" rx="8"/><text x="625.0" y="420.5" text-anchor="middle">Policy</text><text class="mth" x="625" y="386" text-anchor="middle">π<tspan baseline-shift="sub" style="font-size:11px">θ</tspan></text><path class="ar" d="M152 416 L196 416" marker-end="url(#a6)"/><path class="ar" d="M328 416 L366 416" marker-end="url(#a6)"/><path class="ar" d="M518 416 L558 416" marker-end="url(#a6)"/><path class="ar" d="M690 416 L856 416" marker-end="url(#a6)"/><text class="mth" x="85" y="472" text-anchor="middle">s</text><text class="mth" x="920" y="478" text-anchor="middle">a</text><rect class="bx wm" x="470" y="516" width="220" height="50" rx="8"/><text x="580.0" y="537.5" text-anchor="middle">World model</text><text x="580.0" y="553.5" text-anchor="middle">(rₜ, aₜ) → r̂ₜ₊₁</text><path class="ar wm" d="M660 439 L660 514" marker-end="url(#aw)"/><text class="mut" x="668" y="480">aₜ</text><path class="ar wm" d="M470 541 L400 541 L400 498" marker-end="url(#aw)"/><text class="mut" x="300" y="536">r̂ₜ₊₁: cảnh</text><text class="mut" x="300" y="552">mô phỏng</text><text class="mut" x="196" y="610">Policy được huấn luyện bằng RL trong world model thay vì trên đường thật; r phải nhẹ và chỉ giữ thông tin cần thiết</text><text x="85" y="368" text-anchor="middle" class="mut">Cảm biến</text><use href="#cam6" x="20" y="376"/><use href="#ctl6" x="858" y="370"/></svg></div><figcaption class="cap">Hình 6.1. Ba cách tiếp cận lái tự hành. <b>s</b>: dữ liệu cảm biến; <b>a<sub>ψ</sub></b>: mạng nhận thức; <b>r</b>: intermediate representation; <b>π<sub>θ</sub></b>: policy; <b>a</b>: hành động (lái, ga, phanh). Phỏng theo [<a class="cite" href="#ref-VisualAbstractions">VisualAbstractions</a>].</figcaption></figure>
+
+  <h3>Cách chọn intermediate representation</h3>
+  <p>Câu hỏi tiếp theo là chọn intermediate representation (IR) như thế nào. Bảng sau liệt kê IR của một số hệ thống tự lái hiện nay và một số nghiên cứu.</p>
+  <div class="scrollx"><table>
+    <tr><th>Hệ thống</th><th>IR</th><th>Ghi chú</th></tr>
+    <tr><td colspan="3" class="small muted"><b>Hệ thống thương mại</b></td></tr>
+    <tr><td><b>Waymo</b> (robotaxi L4)</td><td>Vật thể, thuộc tính ngữ nghĩa, roadgraph + embedding dày</td><td>Giữ đầu ra có cấu trúc để kiểm chứng an toàn [<a class="cite" href="#ref-Waymo-WFM">Waymo-WFM</a>]</td></tr>
+    <tr><td><b>Tesla FSD</b> (L2, chỉ camera)</td><td>Occupancy dạng voxel + làn dạng chuỗi token; từ v12 là token trung gian trong mạng E2E</td><td>Không có LiDAR; occupancy giúp bắt vật cản lạ [<a class="cite" href="#ref-Tesla-Occ">Tesla-Occ</a>, <a class="cite" href="#ref-Tesla-v14">Tesla-v14</a>]</td></tr>
+    <tr><td><b>Huawei ADS</b> (L2+)</td><td>BEV + mạng GOD cho vật cản bất thường</td><td>Bắt vật không thuộc lớp đã biết: xe lật, đá rơi [<a class="cite" href="#ref-Huawei-GOD">Huawei-GOD</a>]</td></tr>
+    <tr><td><b>Li Auto MindVLA</b> (L2)</td><td>3D Gaussian (theo công bố của hãng)</td><td>Dùng chung cho policy và world model [<a class="cite" href="#ref-Li-MindVLA">Li-MindVLA</a>]</td></tr>
+    <tr><td colspan="3" class="small muted"><b>Nghiên cứu</b></td></tr>
+    <tr><td><b>Phân đoạn vài lớp</b></td><td>Mặt nạ đường, làn, xe, người, đèn trên ảnh</td><td>Vài lớp thô là đủ để policy lái tốt [<a class="cite" href="#ref-CVforAction">CVforAction</a>, <a class="cite" href="#ref-VisualAbstractions">VisualAbstractions</a>]</td></tr>
+    <tr><td><b>BEV raster</b></td><td>Ảnh nhìn từ trên, mỗi kênh một lớp</td><td>Dùng nhiều cho học bắt chước và RL [<a class="cite" href="#ref-ChauffeurNet">ChauffeurNet</a>, <a class="cite" href="#ref-Roach">Roach</a>, <a class="cite" href="#ref-Think2Drive">Think2Drive</a>]</td></tr>
+    <tr><td><b>Occupancy</b></td><td>Lưới ô trống / bị chiếm / chưa biết</td><td>Có bản tối ưu để chạy nhanh trên xe [<a class="cite" href="#ref-FlashOcc">FlashOcc</a>]</td></tr>
+    <tr><td><b>Véc-tơ, query thưa</b></td><td>Một tập nhỏ véc-tơ cho vật thể và làn</td><td>Nhanh hơn lưới BEV dày nhiều lần [<a class="cite" href="#ref-VAD">VAD</a>, <a class="cite" href="#ref-SparseDrive">SparseDrive</a>]</td></tr>
+    <tr><td><b>Latent của world model</b></td><td>Véc-tơ ẩn nén cả cảnh</td><td>Rất gọn nhưng khó kiểm chứng [<a class="cite" href="#ref-MILE">MILE</a>, <a class="cite" href="#ref-GAIA-3">GAIA-3</a>]</td></tr>
+  </table></div>
+
+  <p><b>Nhận xét.</b> IR tốt là IR cân bằng giữa hai yêu cầu:</p>
+  <ul class="tight">
+    <li><b>Nhẹ:</b> ít tốn tính toán và lưu trữ, để chạy thời gian thực trên robot.</li>
+    <li><b>Đủ thông tin:</b> chi tiết vừa đủ cho mục đích hoạt động của policy.</li>
+  </ul>
+  <p>Từ các ví dụ trên, có thể rút ra vài nguyên tắc:</p>
+  <ul class="tight">
+    <li><b>Chỉ giữ thông tin policy dùng.</b> Với xe trên đường, đó là đường, làn, xe, người đi bộ, đèn giao thông. Chi tiết như màu xe, tòa nhà, bầu trời là thừa.</li>
+    <li><b>Độ chi tiết theo mục đích.</b> Vùng gần xe và vật thể quan trọng cần chi tiết hơn vùng xa.</li>
+    <li><b>Dạng thưa cho vật thể, dạng lưới cho vùng đi được.</b> Vật thể biểu diễn bằng véc-tơ thì nhẹ. Vật cản lạ cần occupancy để không bị bỏ sót.</li>
+    <li><b>Giữ vùng "chưa biết".</b> IR phải phân biệt "trống" và "chưa thấy", để policy và world model không quá tự tin.</li>
+    <li><b>Giải mã được khi cần kiểm chứng.</b> Hệ thống càng ít người giám sát (L4), IR càng cần đọc được ra đầu ra có cấu trúc, để giải thích vì sao hệ thống đưa ra quyết định đó.</li>
+  </ul>
+  <p>Vì vậy, không có IR tốt nhất cho mọi hệ thống. Lựa chọn phụ thuộc vào mục đích của robot và khả năng tính toán của robot.</p>
+
+</section>
+<section id="refs">
+  <h2>Tài liệu tham khảo</h2>
+  <ol class="refs">
+<li id="ref-Alpamayo-R1"><b>[Alpamayo-R1]</b> NVIDIA,  :, Yan Wang et al. (2025). <i>Alpamayo-R1: Bridging Reasoning and Action Prediction for Generalizable Autonomous Driving in the Long Tail</i>. <a href="https://arxiv.org/abs/2511.00088" target="_blank" rel="noopener">arXiv:2511.00088</a></li>
+<li id="ref-Alphabet-Q3-26"><b>[Alphabet-Q3-26]</b> Alphabet (2026-10). <i>Q3 2026 earnings call: Remarks from our CEO (Waymo update)</i>. <span class="chip">official</span> <a href="https://blog.google/company-news/inside-google/message-ceo/alphabet-earnings-q3-2026/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Apollo"><b>[Apollo]</b> Code: <a href="https://github.com/ApolloAuto/apollo" target="_blank" rel="noopener">ApolloAuto/apollo</a></li>
+<li id="ref-Aurora-Gen2"><b>[Aurora-Gen2]</b> Aurora (2026-07). <i>Aurora unveils its second-generation autonomous trucks</i>. <span class="chip">press</span> <a href="https://www.ttnews.com/articles/aurora-second-gen-truck" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Aurora-Perception"><b>[Aurora-Perception]</b> Aurora (2026-01). <i>Seeing with superhuman clarity: the physics and architecture behind the Aurora Driver</i>. <span class="chip">official</span> <a href="https://aurora.tech/newsroom/seeing-with-superhuman-clarity-the-physics-and-architecture-behind-the" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Autoware"><b>[Autoware]</b> Code: <a href="https://github.com/autowarefoundation/autoware.universe" target="_blank" rel="noopener">autowarefoundation/autoware.universe</a></li>
+<li id="ref-autoware_msgs"><b>[autoware_msgs]</b> Code: <a href="https://github.com/autowarefoundation/autoware_msgs" target="_blank" rel="noopener">autowarefoundation/autoware_msgs</a></li>
+<li id="ref-C-NCAP"><b>[C-NCAP]</b> C-NCAP (CATARC) (2024-07). <i>C-NCAP Management Regulation 2024 edition - Appendix L (ADAS) and Appendix O (AEB VRU)</i>. <span class="chip">official</span> <a href="https://www.c-ncap.org.cn/cncap-guicheng-detail?id=8" target="_blank" rel="noopener">link</a> · (chỉ link: không tải được)</li>
+<li id="ref-ChauffeurNet"><b>[ChauffeurNet]</b> Mayank Bansal, Alex Krizhevsky, Abhijit Ogale (2018). <i>ChauffeurNet: Learning to Drive by Imitating the Best and Synthesizing the Worst</i>. RSS 2019. <a href="https://arxiv.org/abs/1812.03079" target="_blank" rel="noopener">arXiv:1812.03079</a></li>
+<li id="ref-ClassUnc"><b>[ClassUnc]</b> Jibran Iqbal Shah, Andrei Ivanovic, Kelly Zhu et al. (2026). <i>The Impact of Class Uncertainty Propagation in Perception-Based Motion Planning</i>. <a href="https://arxiv.org/abs/2602.16035" target="_blank" rel="noopener">arXiv:2602.16035</a></li>
+<li id="ref-Cosmos"><b>[Cosmos]</b> NVIDIA,  :, Niket Agarwal et al. (2025). <i>Cosmos World Foundation Model Platform for Physical AI</i>. <a href="https://arxiv.org/abs/2501.03575" target="_blank" rel="noopener">arXiv:2501.03575</a></li>
+<li id="ref-CVforAction"><b>[CVforAction]</b> Brady Zhou, Philipp Krähenbühl, Vladlen Koltun (2019). <i>Does Computer Vision Matter for Action?</i> Science Robotics. <a href="https://arxiv.org/abs/1905.12887" target="_blank" rel="noopener">arXiv:1905.12887</a></li>
+<li id="ref-DreamerV3"><b>[DreamerV3]</b> Danijar Hafner, Jurgis Pasukonis, Jimmy Ba, Timothy Lillicrap (2023). <i>Mastering Diverse Domains through World Models</i>. <a href="https://arxiv.org/abs/2301.04104" target="_blank" rel="noopener">arXiv:2301.04104</a></li>
+<li id="ref-DriveBench"><b>[DriveBench]</b> Shaoyuan Xie, Lingdong Kong, Yuhao Dong et al. (2025). <i>Are VLMs Ready for Autonomous Driving? An Empirical Study from the Reliability, Data, and Metric Perspectives</i>. <a href="https://arxiv.org/abs/2501.04003" target="_blank" rel="noopener">arXiv:2501.04003</a></li>
+<li id="ref-EU-2022-1426"><b>[EU-2022-1426]</b> European Commission (2022-08). <i>Commission Implementing Regulation (EU) 2022/1426 - type-approval of the ADS of fully automated vehicles (amended by (EU) 2026/481)</i>. <span class="chip">official</span> <a href="https://eur-lex.europa.eu/eli/reg_impl/2022/1426/oj" target="_blank" rel="noopener">link</a> · (chỉ link: không tải được)</li>
+<li id="ref-EuroNCAP-AD"><b>[EuroNCAP-AD]</b> Euro NCAP (2026-07). <i>Assisted Driving - Highway &amp; Interurban Assist Systems Protocol v1.2 (implementation Jan 2026)</i>. <span class="chip">official</span> <a href="https://cdn.euroncap.com/cars/assets/Euro_NCAP_Protocol_Assisted_Driving_v1_2_7150e4e41e.pdf" target="_blank" rel="noopener">link</a></li>
+<li id="ref-EuroNCAP-Frontal"><b>[EuroNCAP-Frontal]</b> Euro NCAP (2026-07). <i>Crash Avoidance - Frontal Collisions Protocol v1.2 (implementation Jan 2026)</i>. <span class="chip">official</span> <a href="https://cdn.euroncap.com/cars/assets/Euro_NCAP_Protocol_Crash_Avoidance_Frontal_Collisions_v1_2_220d87e28a.pdf" target="_blank" rel="noopener">link</a></li>
+<li id="ref-FlashOcc"><b>[FlashOcc]</b> Zichen Yu, Changyong Shu, Jiajun Deng et al. (2023). <i>FlashOcc: Fast and Memory-Efficient Occupancy Prediction via Channel-to-Height Plugin</i>. <a href="https://arxiv.org/abs/2311.12058" target="_blank" rel="noopener">arXiv:2311.12058</a></li>
+<li id="ref-FMVSS127"><b>[FMVSS127]</b> NHTSA (2024-11). <i>FMVSS No. 127 Automatic Emergency Braking Systems for Light Vehicles (final rule Apr 2024; revised Nov 2024)</i>. <span class="chip">official</span> <a href="https://www.federalregister.gov/documents/2024/11/26/2024-27349/federal-motor-vehicle-safety-standards-automatic-emergency-braking-systems-for-light-vehicles" target="_blank" rel="noopener">link</a></li>
+<li id="ref-GAIA-3"><b>[GAIA-3]</b> Wayve (2025-12). <i>GAIA-3: Scaling World Models to Power Safety and Evaluation</i>. <span class="chip">preprint</span> <a href="https://wayve.ai/thinking/gaia-3/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Huawei-ADS4"><b>[Huawei-ADS4]</b> Huawei (2025-04). <i>Huawei's Qiankun 4.0 targets Level 3 driving autonomy with radar and AI upgrades</i>. <span class="chip">press</span> <a href="https://kr-asia.com/huaweis-qiankun-4-0-targets-level-3-driving-autonomy-with-radar-and-ai-upgrades" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Huawei-GOD"><b>[Huawei-GOD]</b> 42how (2023-08). <i>Will Avatr's Updated GAEB Outperform Traditional AEB Systems?</i> (mạng GOD của Huawei). <span class="chip">press</span> <a href="https://en.42how.com/2023/08/21/will-avatrs-updated-gaeb-outperform-traditional-aeb-systems/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-J3016"><b>[J3016]</b> SAE International (2021-04). <i>SAE J3016_202104 Taxonomy and Definitions for Terms Related to Driving Automation Systems for On-Road Motor Vehicles</i>. <span class="chip">official</span> <a href="https://saemobilus.sae.org/content/j3016_202104" target="_blank" rel="noopener">link</a></li>
+<li id="ref-L3-Exit-2026"><b>[L3-Exit-2026]</b> Mercedes-Benz / BMW (2026-02). <i>Following Mercedes, BMW also abandons Level 3 automated driving</i>. <span class="chip">press</span> <a href="https://www.electrive.com/2026/02/23/following-mercedes-bmw-also-abandons-level-3-automated-driving/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Li-MindVLA"><b>[Li-MindVLA]</b> Li Auto (2025-03). <i>Li Auto unveils next-gen autonomous driving architecture MindVLA</i>. <span class="chip">press</span> <a href="https://autonews.gasgoo.com/articles/news/li-auto-unveils-next-gen-autonomous-driving-architecture-mindvla-70036319" target="_blank" rel="noopener">link</a> · (chỉ link: không tải được)</li>
+<li id="ref-Maps-Survey"><b>[Maps-Survey]</b> Pengxin Chen, Zhipeng Luo, Xiaoqi Jiang et al. (2025). <i>Maps for Autonomous Driving: Full-process Survey and Frontiers</i>. <a href="https://arxiv.org/abs/2509.12632" target="_blank" rel="noopener">arXiv:2509.12632</a></li>
+<li id="ref-MapUnc"><b>[MapUnc]</b> Xunjiang Gu, Guanyu Song, Igor Gilitschenski et al. (2024). <i>Producing and Leveraging Online Map Uncertainty in Trajectory Prediction</i>. <a href="https://arxiv.org/abs/2403.16439" target="_blank" rel="noopener">arXiv:2403.16439</a></li>
+<li id="ref-MFEval"><b>[MFEval]</b> Yihong Xu, Loïck Chambon, Éloi Zablocki et al. (2023). <i>Towards Motion Forecasting with Real-World Perception Inputs: Are End-to-End Approaches Competitive?</i>. <a href="https://arxiv.org/abs/2306.09281" target="_blank" rel="noopener">arXiv:2306.09281</a></li>
+<li id="ref-MILE"><b>[MILE]</b> Anthony Hu, Gianluca Corrado, Nicolas Griffiths et al. (2022). <i>Model-Based Imitation Learning for Urban Driving</i>. NeurIPS 2022. <a href="https://arxiv.org/abs/2210.07729" target="_blank" rel="noopener">arXiv:2210.07729</a></li>
+<li id="ref-Mobileye-CES25"><b>[Mobileye-CES25]</b> Mobileye (2025-01). <i>Prof. Amnon Shashua at CES 2025: Now. Next. Beyond.</i>. <span class="chip">official</span> <a href="https://www.mobileye.com/blog/prof-amnon-shashua-at-ces-2025/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Mobileye-TrueRed"><b>[Mobileye-TrueRed]</b> Mobileye (2026-11). <i>True Redundancy (technology page)</i>. <span class="chip">official</span> <a href="https://www.mobileye.com/technology/true-redundancy/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-NatComms2024"><b>[NatComms2024]</b> Abdel-Aty &amp; Ding - Nature Communications (2024-06). <i>A matched case-control analysis of autonomous vs human-driven vehicle accidents</i>. <span class="chip">peer-reviewed</span> <a href="https://doi.org/10.1038/s41467-024-48526-4" target="_blank" rel="noopener">link</a></li>
+<li id="ref-NDS-USC"><b>[NDS-USC]</b> Brian Hsuan-Cheng Liao, Chih-Hong Cheng, Hasan Esen et al. (2026). <i>Safety-Aligned 3D Object Detection: Single-Vehicle, Cooperative, and End-to-End Perspectives</i>. <a href="https://arxiv.org/abs/2604.03325" target="_blank" rel="noopener">arXiv:2604.03325</a></li>
+<li id="ref-NHTSA-EA26-002"><b>[NHTSA-EA26-002]</b> NHTSA ODI (2026-03). <i>PE24-031 / EA26-002: Tesla FSD in reduced roadway visibility conditions</i>. <span class="chip">official</span> <a href="https://static.nhtsa.gov/odi/inv/2024/INOA-PE24031-23232.pdf" target="_blank" rel="noopener">link</a></li>
+<li id="ref-P-AP"><b>[P-AP]</b> Satoshi Tanaka, Koji Minoda, Fumiya Watanabe et al. (2025). <i>Rethink 3D Object Detection from Physical World</i>. <a href="https://arxiv.org/abs/2507.00190" target="_blank" rel="noopener">arXiv:2507.00190</a></li>
+<li id="ref-PAS22736"><b>[PAS22736]</b> ISO / SAE (ISO/TC 204) (2021-08). <i>ISO/SAE PAS 22736:2021 Taxonomy and definitions for terms related to driving automation systems for on-road motor vehicles</i>. <span class="chip">official</span> <a href="https://www.iso.org/standard/73766.html" target="_blank" rel="noopener">link</a> · (chỉ link: tài liệu có phí)</li>
+<li id="ref-PKL"><b>[PKL]</b> Jonah Philion, Amlan Kar, Sanja Fidler (2020). <i>Learning to Evaluate Perception Models Using Planner-Centric Metrics</i>. <a href="https://arxiv.org/abs/2004.08745" target="_blank" rel="noopener">arXiv:2004.08745</a></li>
+<li id="ref-R157"><b>[R157]</b> UNECE WP.29 (2023-01). <i>UN Regulation No. 157 - Automated Lane Keeping Systems (ALKS), original + 01 series (Amend.4, EIF 4 Jan 2023)</i>. <span class="chip">official</span> <a href="https://eur-lex.europa.eu/eli/reg/2021/389/oj/eng" target="_blank" rel="noopener">link</a></li>
+<li id="ref-R171"><b>[R171]</b> UNECE WP.29 (2024-09). <i>UN Regulation No. 171 - Driver Control Assistance Systems (DCAS), incl. 01 series (hands-off motorway)</i>. <span class="chip">official</span> <a href="https://eur-lex.europa.eu/eli/reg/2024/2689/oj" target="_blank" rel="noopener">link</a> · (chỉ link: không tải được)</li>
+<li id="ref-Roach"><b>[Roach]</b> Zhejun Zhang, Alexander Liniger, Dengxin Dai, Fisher Yu, Luc Van Gool (2021). <i>End-to-End Urban Driving by Imitating a Reinforcement Learning Coach</i>. ICCV 2021. <a href="https://arxiv.org/abs/2108.08265" target="_blank" rel="noopener">arXiv:2108.08265</a></li>
+<li id="ref-Sparse4Dv3"><b>[Sparse4Dv3]</b> Xuewu Lin, Zixiang Pei, Tianwei Lin et al. (2023). <i>Sparse4D v3: Advancing End-to-End 3D Detection and Tracking</i>. <a href="https://arxiv.org/abs/2311.11722" target="_blank" rel="noopener">arXiv:2311.11722</a></li>
+<li id="ref-SparseDrive"><b>[SparseDrive]</b> Wenchao Sun, Xuewu Lin, Yining Shi et al. (2024). <i>SparseDrive: End-to-End Autonomous Driving via Sparse Scene Representation</i>. <a href="https://arxiv.org/abs/2405.19620" target="_blank" rel="noopener">arXiv:2405.19620</a></li>
+<li id="ref-StreamPETR"><b>[StreamPETR]</b> Shihao Wang, Yingfei Liu, Tiancai Wang et al. (2023). <i>Exploring Object-Centric Temporal Modeling for Efficient Multi-View 3D Object Detection</i>. <a href="https://arxiv.org/abs/2303.11926" target="_blank" rel="noopener">arXiv:2303.11926</a></li>
+<li id="ref-TaskAwareRisk"><b>[TaskAwareRisk]</b> Pasquale Antonante, Sushant Veer, Karen Leung et al. (2023). <i>Task-Aware Risk Estimation of Perception Failures for Autonomous Vehicles</i>. <a href="https://arxiv.org/abs/2305.01870" target="_blank" rel="noopener">arXiv:2305.01870</a></li>
+<li id="ref-Tesla-E2E-talk"><b>[Tesla-E2E-talk]</b> Tesla (2025-10). <i>Tesla Unveils 'World Simulator' (Elluswamy talk on end-to-end FSD)</i>. <span class="chip">press</span> <a href="https://www.itiger.com/news/1146546403" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Tesla-Occ"><b>[Tesla-Occ]</b> 42how (2022-10). <i>Tesla FSD Occupancy Network Explained</i> (Tesla AI Day 2022). <span class="chip">press</span> <a href="https://en.42how.com/2022/10/26/tesla-fsd-occupancy-network-explained/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Tesla-Q3-26b"><b>[Tesla-Q3-26b]</b> Tesla (via TeslaNorth) (2026-10). <i>Tesla Q3 2026 earnings: Robotaxi and FSD update</i>. <span class="chip">press</span> <a href="https://teslanorth.com/2026/10/21/tesla-q3-2026-earnings/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Tesla-v14"><b>[Tesla-v14]</b> Tesla (2025-10). <i>Tesla FSD v14 release notes</i>. <span class="chip">press</span> <a href="https://electrek.co/2025/10/07/tesla-fsd-v14-release-notes/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Think2Drive"><b>[Think2Drive]</b> Qifeng Li, Xiaosong Jia, Shaobo Wang, Junchi Yan (2024). <i>Think2Drive: Efficient Reinforcement Learning by Thinking in Latent World Model for Quasi-Realistic Autonomous Driving</i>. ECCV 2024. <a href="https://arxiv.org/abs/2402.16720" target="_blank" rel="noopener">arXiv:2402.16720</a></li>
+<li id="ref-UN-ADS-2026"><b>[UN-ADS-2026]</b> UNECE WP.29 (2026-06). <i>UNECE adopts first-ever global rules allowing fully autonomous vehicles (UN Regulation + GTR on Automated Driving Systems)</i>. <span class="chip">official</span> <a href="https://unece.org/sustainable-development/press/unece-adopts-first-ever-global-rules-allowing-fully-autonomous" target="_blank" rel="noopener">link</a> · (chỉ link: không tải được)</li>
+<li id="ref-Uncertainty-Review"><b>[Uncertainty-Review]</b> Araújo et al. (2024-07). <i>The Road to Safety: A Review of Uncertainty and Applications to Autonomous Driving Perception</i>. <span class="chip">peer-reviewed</span> <a href="https://www.mdpi.com/1099-4300/26/8/634" target="_blank" rel="noopener">link</a> · (chỉ link: không tải được)</li>
+<li id="ref-VAD"><b>[VAD]</b> Bo Jiang, Shaoyu Chen, Qing Xu et al. (2023). <i>VAD: Vectorized Scene Representation for Efficient Autonomous Driving</i>. ICCV 2023. <a href="https://arxiv.org/abs/2303.12077" target="_blank" rel="noopener">arXiv:2303.12077</a></li>
+<li id="ref-VisualAbstractions"><b>[VisualAbstractions]</b> Aseem Behl, Kashyap Chitta, Aditya Prakash, Eshed Ohn-Bar, Andreas Geiger (2020). <i>Label Efficient Visual Abstractions for Autonomous Driving</i>. IROS 2020. <a href="https://arxiv.org/abs/2005.10091" target="_blank" rel="noopener">arXiv:2005.10091</a></li>
+<li id="ref-Waymo-6G"><b>[Waymo-6G]</b> Waymo (2024-08). <i>Meet the 6th-generation Waymo Driver</i>. <span class="chip">official</span> <a href="https://waymo.com/blog/2024/08/meet-the-6th-generation-waymo-driver/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Waymo-6G-press"><b>[Waymo-6G-press]</b> Waymo (2026-02). <i>Waymo's 6th-gen Driver goes live with 42% fewer sensors</i>. <span class="chip">press</span> <a href="https://www.automotiveworld.com/news/waymos-6th-gen-driver-goes-live-with-42-fewer-sensors/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Waymo-SafetyHub"><b>[Waymo-SafetyHub]</b> Waymo (2026-06). <i>Waymo Safety Impact data hub (data through June 2026)</i>. <span class="chip">official</span> <a href="https://waymo.com/safety/impact/" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Waymo-SchoolBus"><b>[Waymo-SchoolBus]</b> NPR (NHTSA recall 25E-084 coverage) (2025-12). <i>Waymo recalls robotaxi software after vehicles illegally passed stopped school buses</i>. <span class="chip">press</span> <a href="https://www.npr.org/2025/12/06/nx-s1-5635614/waymo-school-buses-recall" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Waymo-WFM"><b>[Waymo-WFM]</b> Waymo (2025-12). <i>Demonstrably Safe AI for Autonomous Driving (Waymo Foundation Model)</i>. <span class="chip">official</span> <a href="https://waymo.com/blog/2025/12/demonstrably-safe-ai-for-autonomous-driving" target="_blank" rel="noopener">link</a></li>
+<li id="ref-Waymo-WorldModel"><b>[Waymo-WorldModel]</b> Waymo (2026-02). <i>The Waymo World Model: A New Frontier for Autonomous Driving Simulation</i>. <span class="chip">official</span> <a href="https://waymo.com/blog/2026/02/the-waymo-world-model-a-new-frontier-for-autonomous-driving-simulation" target="_blank" rel="noopener">link</a></li>
+<li id="ref-XPeng-AIDay25"><b>[XPeng-AIDay25]</b> XPeng (2025-11). <i>XPENG AI Day 2025 'Emergence': VLA 2.0, Turing AI chips, Robotaxi</i>. <span class="chip">official</span> <a href="https://www.xpeng.com/news/019a56f54fe99a2a0a8d8a0282e402b7" target="_blank" rel="noopener">link</a></li>
+<li id="ref-XPeng-L4-GZ"><b>[XPeng-L4-GZ]</b> XPeng (2026-10). <i>Xpeng wins Guangzhou robotaxi trial approval</i>. <span class="chip">press</span> <a href="https://cnevpost.com/2026/10/26/xpeng-wins-guangzhou-robotaxi-trial-approval/" target="_blank" rel="noopener">link</a></li>
+  </ol>
+</section>
+</main>
+
+<script>
+/* ---------- theme ---------- */
+(function(){
+  const b=document.getElementById('themebtn'), r=document.documentElement;
+  let t=null; try{t=localStorage.getItem('plo-theme')}catch(e){}
+  if(t) r.setAttribute('data-theme',t);
+  b.onclick=()=>{const dark=r.getAttribute('data-theme')==='dark'||(!r.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
+    const n=dark?'light':'dark'; r.setAttribute('data-theme',n); try{localStorage.setItem('plo-theme',n)}catch(e){} };
+})();
+const LV=['L0–L1','L2','L2++','L3','L4'];
+
+/* ---------- K table ---------- */
+(function(){
+  const rows=[
+    ['K1','Vật phía trước (CIPV): khoảng cách, vận tốc, TTC','fffff','FMVSS 127: AEB 10–145 km/h [FMVSS127]'],
+    ['K2','VRU (người đi bộ, xe đạp, xe máy) ngày + đêm, bị che','fffff','PAEB ≤ 73 km/h; NCAP trẻ em bị che, ghost probe [EuroNCAP-Frontal, C-NCAP]'],
+    ['K3','Vạch làn, mép đường','hffff','LKA, NCAP'],
+    ['K4','Tự đánh giá: tầm phát hiện, cảm biến bị che','hffff','NCAP 2/5 phút; R157 [EuroNCAP-AD, R157]'],
+    ['K5','Ý định: cut-in/out, xi-nhan, đèn phanh','nffff','NCAP cut-in 50–120 km/h; R157 §7.1.4'],
+    ['K6','Giám sát người lái (DMS)','nfffn','R171: 5 s; L4 → giám sát hành khách'],
+    ['K7','Track 360° + covariance','nhfff','Autoware TrackedObject [autoware_msgs]'],
+    ['K8','Đèn giao thông ↔ làn, biển báo','nhfhf','TLR pipeline Autoware/Apollo'],
+    ['K9','Bản đồ online + topology','nnfhh','NOA không HD map [Maps-Survey]; L3/L4 thường HD map'],
+    ['K10','Độ bất định đã calib','nhhff','[ClassUnc, MapUnc]'],
+    ['K11','Giám sát ODD','nhhff','R157; EU 2022/1426'],
+    ['K12','Occupancy, vật chưa biết lớp','nnhff','Aurora remainder; occupancy grid [Aurora-Perception]'],
+    ['K13','Dự đoán quỹ đạo đa mode','nnhff','Autoware PredictedObject; [Waymo-WFM]'],
+    ['K14','Ngữ nghĩa luật đặc biệt (xe ưu tiên, xe buýt trường học)','nnhhf','[Waymo-SchoolBus]'],
+  ];
+  const sym={f:'●',h:'◐',n:'○'};const t=document.getElementById('mx');
+  const GL=['L0–L1','L2','L2++','L3','L4'];let lastG=-1;
+  rows.forEach(([k,n,s,c])=>{const g=s.indexOf('f');if(g!==lastG){lastG=g;const gr=document.createElement('tr');gr.className='grp';gr.innerHTML='<td colspan="8">Bắt buộc từ '+GL[g]+'</td>';t.appendChild(gr)}
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td><span class="chip k">'+k+'</span></td><td>'+n+'</td>'+[...s].map(x=>'<td class="c"><b class="dot '+x+'">'+sym[x]+'</b></td>').join('')+'<td class="small">'+c+'</td>';t.appendChild(tr)});
+})();
+
+/* ---------- glossary for diagram ---------- */
+// [regex, term, English, Vietnamese name, explanation (STE)]
+const GLOSS=[
+ ['\\bCIPV\\b','CIPV','Closest In-Path Vehicle','xe gần nhất trên đường đi','Xe gần nhất nằm trong làn mà xe mình sẽ đi.'],
+ ['\\bTTC\\b','TTC','Time To Collision','thời gian đến va chạm','Thời gian còn lại trước va chạm, nếu hai xe giữ vận tốc hiện tại.'],
+ ['\\bVRU\\b','VRU','Vulnerable Road User','người tham gia giao thông dễ bị tổn thương','Người đi bộ, người đi xe đạp, người đi xe máy.'],
+ ['\\bAEB\\b','AEB','Autonomous Emergency Braking','phanh khẩn cấp tự động','Hệ thống tự phanh khi có nguy cơ va chạm.'],
+ ['\\bFCW\\b','FCW','Forward Collision Warning','cảnh báo va chạm phía trước','Hệ thống cảnh báo người lái. Hệ thống không phanh.'],
+ ['\\bACC\\b','ACC','Adaptive Cruise Control','kiểm soát hành trình thích ứng','Hệ thống giữ tốc độ và giữ khoảng cách với xe phía trước.'],
+ ['\\bLKA\\b','LKA','Lane Keeping Assist','hỗ trợ giữ làn','Hệ thống đánh lái để giữ xe trong làn.'],
+ ['\\bDMS\\b','DMS','Driver Monitoring System','hệ thống giám sát người lái','Camera trong cabin kiểm tra người lái có nhìn đường không.'],
+ ['\\bNOA\\b','NOA','Navigate on Autopilot','lái theo tuyến','Hệ thống lái theo tuyến dẫn đường. Người lái vẫn giám sát.'],
+ ['\\bALKS\\b','ALKS','Automated Lane Keeping System','hệ thống tự giữ làn','Hệ thống L3 trên cao tốc, theo UN R157.'],
+ ['\\bMRM\\b','MRM','Minimal Risk Maneuver','thao tác rủi ro tối thiểu','Hệ thống tự giảm tốc hoặc tự dừng xe an toàn.'],
+ ['\\bMRC\\b','MRC','Minimal Risk Condition','trạng thái rủi ro tối thiểu','Trạng thái an toàn sau MRM, ví dụ xe dừng ở lề.'],
+ ['\\bDDT\\b','DDT','Dynamic Driving Task','nhiệm vụ lái động','Điều khiển dọc, điều khiển ngang và OEDR.'],
+ ['\\bODD\\b','ODD','Operational Design Domain','vùng hoạt động thiết kế','Loại đường, tốc độ, thời tiết, ánh sáng mà hệ thống được phép chạy.'],
+ ['\\bOEDR\\b','OEDR','Object and Event Detection and Response','phát hiện vật thể, sự kiện và phản ứng','Hệ thống thấy vật thể hoặc sự kiện, sau đó phản ứng.'],
+ ['\\bDCAS\\b','DCAS','Driver Control Assistance Systems','hệ thống hỗ trợ điều khiển cho người lái','Hệ thống L2, theo UN R171.'],
+ ['\\bBEV\\b','BEV',"Bird's-Eye View",'góc nhìn từ trên xuống','Mô hình chuyển dữ liệu của mọi cảm biến về một mặt phẳng nhìn từ trên.'],
+ ['\\bLiDAR\\b','LiDAR','Light Detection and Ranging','cảm biến laser đo khoảng cách','Cảm biến bắn tia laser và tạo đám mây điểm 3D.'],
+ ['\\b[Rr]adar\\b','Radar','Radio Detection and Ranging','cảm biến sóng vô tuyến','Cảm biến đo khoảng cách và vận tốc. Radar hoạt động tốt trong mưa và sương.'],
+ ['\\b4D\\b','Radar 4D','4D imaging radar','radar ảnh 4 chiều','Radar đo khoảng cách, góc ngang, góc đứng và vận tốc. Độ phân giải cao hơn radar thường.'],
+ ['Doppler','Doppler','Doppler effect','hiệu ứng Doppler','Radar dùng hiệu ứng này để đo vận tốc trực tiếp.'],
+ ['\\bGNSS\\b','GNSS','Global Navigation Satellite System','hệ thống định vị vệ tinh','Ví dụ: GPS, Galileo, BeiDou.'],
+ ['\\bIMU\\b','IMU','Inertial Measurement Unit','khối đo quán tính','Thiết bị đo gia tốc và tốc độ quay của xe.'],
+ ['\\bSD\\b','SD map / SD prior','Standard Definition map','bản đồ dẫn đường thông thường','Ví dụ: OpenStreetMap. “Prior” là thông tin có trước. Mô hình dùng nó làm gợi ý.'],
+ ['\\bHD\\b','HD map','High Definition map','bản đồ độ chính xác cao','Bản đồ có từng làn, vạch dừng, đèn. Đội bản đồ phải cập nhật nó.'],
+ ['\\dMP\\b','MP','Megapixel','triệu điểm ảnh','Độ phân giải của camera.'],
+ ['\\bTOPS\\b','TOPS','Tera Operations Per Second','nghìn tỷ phép tính mỗi giây','Đơn vị đo năng lực tính toán của chip.'],
+ ['\\bFMVSS\\b','FMVSS','Federal Motor Vehicle Safety Standard','tiêu chuẩn an toàn xe cơ giới liên bang Mỹ','FMVSS 127 bắt buộc AEB.'],
+ ['NCAP','NCAP','New Car Assessment Programme','chương trình đánh giá xe mới','Euro NCAP, C-NCAP chấm điểm an toàn. Đây không phải luật.'],
+ ['\\bR157\\b','R157','UN Regulation No. 157','quy chuẩn Liên Hợp Quốc số 157','Quy chuẩn cho ALKS (L3).'],
+ ['\\bR171\\b','R171','UN Regulation No. 171','quy chuẩn Liên Hợp Quốc số 171','Quy chuẩn cho DCAS (L2).'],
+ ['\\bHMI\\b','HMI','Human-Machine Interface','giao diện người–máy','Màn hình, âm thanh, rung để báo cho người lái.'],
+ ['\\bDSSAD\\b','DSSAD','Data Storage System for Automated Driving','hệ thống ghi dữ liệu lái tự động','Hệ thống ghi dữ liệu để điều tra sự cố.'],
+ ['\\bNHTSA\\b','NHTSA','National Highway Traffic Safety Administration','cơ quan an toàn giao thông đường bộ Mỹ','Cơ quan này điều tra lỗi và ra lệnh recall.'],
+ ['\\bUN ADS\\b','UN ADS','Automated Driving System','quy chuẩn UN cho hệ thống lái tự động','Quy chuẩn Liên Hợp Quốc cho ADS (Automated Driving System), thông qua 06/2026.'],
+ ['\\bE2E\\b','E2E','End-to-End','đầu–cuối','Một mạng nhận dữ liệu cảm biến và xuất quỹ đạo hoặc lệnh lái.'],
+ ['mono-3D','mono-3D','Monocular 3D detection','phát hiện 3D từ một camera','Mô hình ước lượng vị trí 3D của vật từ ảnh của một camera.'],
+ ['\\b2D\\b','2D detector','2D object detector','bộ phát hiện vật thể 2D','Mô hình tìm vật thể trong ảnh và vẽ hộp quanh vật.'],
+ ['CenterPoint','CenterPoint','—','tên mô hình','Mô hình phát hiện vật 3D từ LiDAR. Mô hình dự đoán tâm của vật.'],
+ ['PTv3','PTv3','Point Transformer V3','tên mô hình','Mô hình xử lý đám mây điểm LiDAR.'],
+ ['StreamPETR|Sparse4D','StreamPETR / Sparse4D','—','tên mô hình','Mô hình phát hiện 3D từ nhiều camera. Mô hình dùng query thưa và thông tin theo thời gian.'],
+ ['sparse query','Sparse query','—','truy vấn thưa','Mô hình dùng một số ít “câu hỏi” học được. Mỗi câu hỏi tìm một vật. Cách này nhanh hơn xử lý mọi điểm ảnh.'],
+ ['BEVFusion','BEVFusion','—','tên mô hình','Mô hình hợp nhất camera và LiDAR trong không gian BEV.'],
+ ['MapTR','MapTR','Map TRansformer','tên mô hình','Mô hình dựng bản đồ vector (đường polyline) từ camera, khi xe đang chạy.'],
+ ['FlashOcc','FlashOcc','—','tên mô hình','Mô hình occupancy nhẹ. Mô hình dễ chạy trên chip của xe.'],
+ ['RaCFormer','RaCFormer','Radar–Camera Transformer','tên mô hình','Mô hình hợp nhất radar và camera.'],
+ ['AB3DMOT','AB3DMOT','A Baseline for 3D Multi-Object Tracking','tên mô hình','Tracker 3D dùng bộ lọc Kalman.'],
+ ['MOTR','MOTR','Multi-Object Tracking with TRansformer','tên mô hình','Tracker đầu–cuối dùng query.'],
+ ['Kalman','Kalman','Kalman filter','bộ lọc Kalman','Thuật toán ước lượng vị trí, vận tốc và độ bất định từ phép đo có nhiễu.'],
+ ['\\bNDS\\b','NDS','nuScenes Detection Score','điểm phát hiện nuScenes','Điểm tổng hợp cho phát hiện 3D trên bộ dữ liệu nuScenes.'],
+ ['\\bGT\\b','GT','Ground Truth','nhãn đúng','Nhãn do người gán. Mô hình học và được đánh giá theo nhãn này.'],
+ ['[Tt]rack','Track','Track','vật thể được theo dõi','Vật thể có ID ổn định theo thời gian, có vị trí, vận tốc và độ bất định.'],
+ ['covariance','Covariance','Covariance','hiệp phương sai','Số đo độ bất định của vị trí và vận tốc.'],
+ ['[Oo]ccupancy','Occupancy','Occupancy grid','lưới chiếm chỗ','Không gian chia thành ô. Mỗi ô là “chiếm”, “trống” hoặc “chưa biết”.'],
+ ['UNKNOWN','UNKNOWN','Unknown class','lớp chưa biết','Vật có thật, nhưng mô hình không biết tên lớp. Planning vẫn phải tránh nó.'],
+ ['topology','Topology','Topology','quan hệ topo','Quan hệ giữa các phần tử bản đồ. Ví dụ: làn nào nối làn nào, đèn nào cho làn nào.'],
+ ['cut-in','Cut-in','Cut-in','xe cắt vào làn','Xe ở làn bên chuyển vào làn của xe mình.'],
+ ['cut-out|cut-in/out','Cut-out','Cut-out','xe rời làn','Xe phía trước rời làn. Vật ở phía trước nó đột ngột lộ ra.'],
+ ['ground seg','Ground segmentation','Ground segmentation','tách mặt đường','Thuật toán tách điểm mặt đường khỏi điểm của vật.'],
+ ['cluster','Clustering','Clustering','gom cụm','Thuật toán gom các điểm gần nhau thành một vật.'],
+ ['remainder','Remainder','Remainder Explainer (Aurora)','phần chưa giải thích','Dữ liệu cảm biến mà các vật đã biết không giải thích được. Hệ thống vẫn tránh vùng đó.'],
+ ['[Ee]go','Ego','Ego vehicle','xe của mình','Xe mang hệ thống tự lái.'],
+ ['teacher|student','Teacher → student','Knowledge distillation','chưng cất tri thức','Mô hình lớn (teacher) dạy mô hình nhỏ (student). Mô hình nhỏ chạy trên xe.'],
+ ['\\bADAS\\b','ADAS','Advanced Driver Assistance Systems','hệ thống hỗ trợ lái nâng cao','Các chức năng L0–L2, ví dụ AEB, ACC, LKA.'],
+ ['calib','Calib','Calibration','hiệu chỉnh độ tin cậy','Xác suất mà mô hình báo phải khớp với tỷ lệ đúng thực tế. Ví dụ: báo 90% thì phải đúng khoảng 90% số lần.'],
+ ['\\bEU\\b','EU 2022/1426','EU Implementing Regulation 2022/1426','quy định thi hành của EU','Quy định phê duyệt hệ thống lái tự động L4 cho số lượng xe nhỏ.'],
+];
+function glossFor(text){const out=[];GLOSS.forEach(g=>{if(new RegExp(g[0]).test(text)&&!out.includes(g))out.push(g)});
+  if(!out.length)return'';
+  return '<div class="gl"><b>Thuật ngữ</b><ul>'+out.map(g=>'<li><b>'+g[1]+'</b>'+(g[2]&&g[2]!=='—'?' ('+g[2]+')':'')+': <i>'+g[3]+'</i>. '+g[4]+'</li>').join('')+'</ul></div>'}
+/* ---------- 2 diagram ---------- */
+const N=[
+ // id, col, label, minLevel, from[], info
+ ['s_camf',0,'Camera trước (8MP)',0,[],'Cảm biến cơ bản cho AEB, ACC, LKA. Có ở mọi cấp.'],
+ ['s_radf',0,'Radar trước',0,[],'Đo khoảng cách và vận tốc trực tiếp (Doppler). Bền trong mưa, sương.'],
+ ['s_cab',0,'Camera cabin',1,[],'Cho DMS. R171 bắt buộc giám sát người lái ở L2.'],
+ ['s_us',0,'Siêu âm (12)',1,[],'Tầm ngắn, đỗ xe, vật sát xe.'],
+ ['s_cam',0,'Camera 360° (7–14, 2–17MP)',2,[],'Cấu hình L2++/L4 năm 2026: 11–14 camera.'],
+ ['s_radc',0,'Radar góc / 4D imaging',2,[],'Radar 4D đang quay lại: Mobileye 2026, Huawei ADS 4, Waymo thế hệ 6.'],
+ ['s_gnss',0,'GNSS/IMU + bản đồ SD/HD',2,[],'Prior cho map online (SD map +45% mAP tầm xa) và định vị.'],
+ ['s_lid',0,'LiDAR (tầm xa + tầm ngắn)',3,[],'Tùy chọn ở L2++ Trung Quốc. Mercedes: “thiết yếu từ L3”. L4: 4–9 LiDAR.'],
+ ['s_mic',0,'Micro',4,[],'Nghe còi xe ưu tiên. Waymo, Zoox dùng.'],
+
+ ['m_2d',1,'Detector 2D / mono-3D',0,['s_camf'],'Practical. Đầu ra: box + lớp + điểm tin cậy.'],
+ ['m_rad',1,'Xử lý radar (cluster, Doppler)',0,['s_radf','s_radc'],'Practical. Đầu ra: điểm/vật thể radar có vận tốc.'],
+ ['m_lane',1,'Phát hiện làn (đa thức)',0,['s_camf'],'Practical. Cho LKA.'],
+ ['m_dms',1,'Mô hình DMS',1,['s_cab'],'Practical. Hướng nhìn, mắt, tư thế.'],
+ ['m_hl',1,'Giám sát cảm biến (che, suy giảm)',1,['s_camf','s_cam','s_radf','s_lid'],'Practical ở mức phát hiện che. NHTSA EA26-002 hỏi: hệ thống có nhận ra camera suy giảm không?'],
+ ['m_tlr',1,'Đèn giao thông + biển báo',1,['s_camf','s_cam','s_gnss'],'Practical. Pipeline dùng map: detector → classifier → fusion đa camera → arbiter.'],
+ ['m_bev',1,'Camera BEV / sparse query + thời gian',2,['s_cam'],'Practical. StreamPETR, Sparse4Dv3 (71,9 NDS). Có trong Autoware.'],
+ ['m_map',1,'Bản đồ online (MapTR) + SD prior',2,['s_cam','s_gnss'],'Practical ở L2++. Độ bất định map: research.'],
+ ['m_occ',1,'Occupancy camera',2,['s_cam'],'Practical ở L2++ (FlashOcc). Long tail vẫn là vấn đề.'],
+ ['m_lid',1,'LiDAR detector (CenterPoint, PTv3)',3,['s_lid'],'Practical. CenterPoint 65,5 NDS. Có trong Autoware.'],
+ ['m_geo',1,'Kênh hình học (ground seg, cluster, grid)',3,['s_lid','s_radc','s_us'],'Practical. Thấy mọi vật có thể tích, kể cả lớp chưa học.'],
+ ['m_aud',1,'Phát hiện còi / đèn ưu tiên',4,['s_mic','s_cam'],'Một phần practical. Lỗi thực tế còn xảy ra.'],
+
+ ['f_obj',2,'Hợp nhất mức vật thể (radar–camera)',0,['m_2d','m_rad'],'Practical. Kiến trúc ADAS chuẩn.'],
+ ['f_trk',2,'Tracker đa vật thể',1,['f_obj','m_bev','f_bev'],'Practical: Kalman (AB3DMOT). Query-based (Sparse4Dv3, MOTR): đang vào sản phẩm.'],
+ ['f_bev',2,'Hợp nhất BEV (BEVFusion, radar–camera)',3,['m_bev','m_lid','m_rad'],'Practical. BEVFusion là chuẩn de-facto. Radar–camera RaCFormer 70,2 NDS (research).'],
+ ['f_pred',2,'Dự đoán quỹ đạo',3,['f_trk','m_map'],'Practical. Hiệu năng giảm khi đầu vào là track thật thay vì GT [MFEval].'],
+ ['f_val',2,'Kiểm tra chéo / kênh độc lập',3,['f_trk','m_geo','m_occ'],'Practical ở L4 (Waymo validation layer, Mobileye hai kênh, Aurora remainder).'],
+ ['f_odd',2,'Giám sát ODD + ước lượng tầm',3,['m_hl','m_map','s_gnss'],'Một phần practical. R157 yêu cầu. Phương pháp ít được công bố.'],
+
+ ['o1',3,'K1 CIPV, TTC',0,['f_obj','f_trk'],'Gửi: logic AEB/ACC, planning.'],
+ ['o2',3,'K2 VRU ngày + đêm',0,['f_obj','f_trk'],'Gửi: AEB, planning. Ánh sáng yếu vẫn là điểm yếu (odds ×5,25 lúc hoàng hôn).'],
+ ['o3',3,'K3 Vạch làn, mép đường',0,['m_lane','m_map'],'Gửi: LKA, planning.'],
+ ['o11',3,'K4 Tầm phát hiện, sức khỏe cảm biến',1,['m_hl','f_odd'],'Gửi: giám sát an toàn, HMI. NCAP: hủy ≤ 2 phút, cảnh báo ≤ 5 phút.'],
+ ['o5',3,'K5 Ý định: cut-in, xi-nhan',1,['f_trk'],'Gửi: planning. NCAP test cut-in 50–120 km/h.'],
+ ['o13',3,'K6 Trạng thái người lái',1,['m_dms'],'Gửi: HMI. R171: cảnh báo sau 5 s.'],
+ ['o4',3,'K7 Track 360° + covariance',2,['f_trk'],'Gửi: prediction, planning, ghi dữ liệu.'],
+ ['o7',3,'K8 Đèn ↔ làn, biển báo',2,['m_tlr','m_map'],'Gửi: planning.'],
+ ['o6',3,'K9 Map + topology',2,['m_map'],'Gửi: prediction, planning.'],
+ ['o10',3,'K10 Độ bất định calib',3,['f_trk','f_val'],'Gửi: planning, giám sát an toàn. Calib tốt: research.'],
+ ['o12',3,'K11 Cờ ODD',3,['f_odd'],'Gửi: giám sát an toàn, HMI, ghi dữ liệu.'],
+ ['o8',3,'K12 Occupancy, UNKNOWN',3,['m_occ','m_geo','f_val'],'Gửi: planning, giám sát an toàn.'],
+ ['o9',3,'K13 Quỹ đạo dự đoán',3,['f_pred'],'Gửi: planning.'],
+ ['o14',3,'K14 Ngữ nghĩa luật đặc biệt',4,['m_aud','f_trk','m_tlr'],'Gửi: planning, hỗ trợ từ xa.'],
+
+ ['u_aeb',4,'AEB',0,['o1','o2'],'L0–L1. Phanh khẩn cấp. Nhận CIPV/TTC gần trực tiếp. FMVSS 127: 10–145 km/h.'],
+ ['u_fcw',4,'FCW',0,['o1','o2'],'L0–L1. Cảnh báo va chạm phía trước.'],
+ ['u_acc',4,'ACC',0,['o1'],'L1. Giữ tốc độ và khoảng cách.'],
+ ['u_lka',4,'LKA',0,['o3'],'L1. Hỗ trợ giữ làn.'],
+ ['u_dms',4,'DMS',1,['o13'],'L2. R171: cảnh báo sau 5 s không nhìn đường.'],
+ ['u_blk',4,'Cảnh báo cảm biến bị che',1,['o11'],'L2. Euro NCAP: hủy ≤ 2 phút, cảnh báo ≤ 5 phút.'],
+ ['u_ca',4,'Tránh va chạm: vật đứng yên, xe phanh, cut-in/out',1,['o1','o3','o5'],'L2. Euro NCAP Assisted Driving: cut-in 50–120 km/h, vật đứng yên cả trong cua.'],
+ ['u_noa',4,'NOA cao tốc → đô thị',2,['o3','o4','o6'],'L2++. Lái theo tuyến. Cần track 360° và bản đồ online.'],
+ ['u_tl',4,'Tuân thủ đèn / biển báo',2,['o7'],'L2++. Đèn phải gán đúng làn.'],
+ ['u_vru',4,'Bảo vệ VRU đô thị',2,['o2','o4'],'L2++. Người đi bộ, xe đạp, xe máy trong đô thị.'],
+ ['u_alks',4,'Lái có điều kiện (ALKS)',3,['o4','o8','o9','o10','o11'],'L3. R157: tầm phía trước 46 m (60 km/h) → 150 m (130 km/h); tự giảm tốc theo tầm thực tế.'],
+ ['u_tor',4,'Yêu cầu tiếp quản (4 s)',3,['o13','o11','o12'],'L3. Leo thang cảnh báo sau 4 s.'],
+ ['u_mrm',4,'MRM → MRC',3,['o8','o10','o11','o12'],'L3: bắt đầu sớm nhất 10 s sau yêu cầu tiếp quản. L4: đưa xe về MRC.'],
+ ['u_ddt',4,'DDT đầy đủ trong ODD',4,['o4','o6','o7','o8','o9','o14'],'L4. Điều khiển dọc, ngang, OEDR, không cần người lái.'],
+ ['u_odd',4,'Phát hiện ra khỏi ODD',4,['o12','o11'],'L4. EU 2022/1426, quy chuẩn UN ADS.'],
+ ['u_rem',4,'Hỗ trợ từ xa',4,['o14','o12'],'L4 robotaxi.'],
+];
+const COLS=['Cảm biến','Mô hình','Hợp nhất','Đầu ra','Dùng cho'];
+const CLS=['s','m','f','o','u'];
+const dg=document.getElementById('dg'), svg=document.getElementById('dgsvg');
+const byId={}; const out={};
+N.forEach(n=>{byId[n[0]]=n; out[n[0]]=[]});
+N.forEach(n=>n[4].forEach(f=>out[f].push(n[0])));
+COLS.forEach((c,i)=>{const col=document.createElement('div');col.className='col';col.innerHTML='<div class="colh">'+c+'</div>';
+  N.filter(n=>n[1]===i).forEach(n=>{const d=document.createElement('div');d.className='nd '+CLS[i];d.id='n_'+n[0];
+    d.innerHTML='<span class="lvt">'+LV[n[3]]+'</span>'+n[2];d.onclick=()=>select(n[0]);col.appendChild(d)});
+  dg.appendChild(col)});
+let lvl=4, sel=null;
+const edges=[];
+N.forEach(n=>n[4].forEach(f=>{const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('class','e');svg.appendChild(p);edges.push({a:f,b:n[0],p})}));
+function layout(){const R=dg.getBoundingClientRect();
+  edges.forEach(e=>{const A=document.getElementById('n_'+e.a).getBoundingClientRect(),B=document.getElementById('n_'+e.b).getBoundingClientRect();
+    const x1=A.right-R.left,y1=A.top+A.height/2-R.top,x2=B.left-R.left,y2=B.top+B.height/2-R.top,dx=Math.max(30,(x2-x1)/2);
+    e.p.setAttribute('d',`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`)})}
+function chain(id){const s=new Set([id]);const up=[id],dn=[id];
+  while(up.length){const x=up.pop();byId[x][4].forEach(f=>{if(!s.has(f)&&byId[f][3]<=lvl){s.add(f);up.push(f)}})}
+  while(dn.length){const x=dn.pop();out[x].forEach(t=>{if(!s.has(t)&&byId[t][3]<=lvl){s.add(t);dn.push(t)}})}
+  return s}
+function render(){const ch=sel?chain(sel):null;
+  N.forEach(n=>{const d=document.getElementById('n_'+n[0]);d.classList.toggle('off',n[3]>lvl);
+    d.classList.toggle('dim',!!ch&&n[3]<=lvl&&!ch.has(n[0]));d.classList.toggle('sel',n[0]===sel)});
+  edges.forEach(e=>{const act=byId[e.a][3]<=lvl&&byId[e.b][3]<=lvl;e.p.classList.toggle('off',!act);
+    const hi=!!ch&&act&&ch.has(e.a)&&ch.has(e.b);e.p.classList.toggle('hi',hi);e.p.classList.toggle('dim',!!ch&&act&&!hi)});
+  const info=document.getElementById('dginfo');
+  if(sel){const n=byId[sel];info.innerHTML='<b>'+n[2]+'</b> · cần từ <b>'+LV[n[3]]+'</b> · '+n[5]+(n[3]>lvl?' <i>(không cần ở cấp đang chọn)</i>':'')+glossFor(n[2]+' '+n[5])}
+  else info.textContent='Bấm một khối để xem chi tiết. Đang hiện cấp '+LV[lvl]+': '+N.filter(n=>n[3]<=lvl).length+'/'+N.length+' khối được dùng.'}
+function select(id){sel=sel===id?null:id;render()}
+document.querySelectorAll('#lvbar button').forEach(b=>b.onclick=()=>{lvl=+b.dataset.l;
+  document.querySelectorAll('#lvbar button').forEach(x=>x.classList.toggle('on',x===b));render()});
+window.addEventListener('resize',layout);
+if(window.ResizeObserver) new ResizeObserver(layout).observe(dg);
+layout();render();
+
+/* ---------- 3.4 TRL ---------- */
+(function(){
+  const T=[
+    ['Camera 2D + radar cho AEB/ACC/LKA',9,9,'Bắt buộc theo FMVSS 127; NCAP hằng năm [FMVSS127, EuroNCAP-Frontal]'],
+    ['Fusion LiDAR+camera+radar cho L4 trong ODD',9,9,'>300M dặm không người lái [Alphabet-Q3-26, Waymo-SafetyHub]'],
+    ['Camera BEV / sparse query (L2 → không người lái)',7,9,'Sản xuất hàng loạt ở L2; có trong Autoware/Apollo [Sparse4Dv3, StreamPETR, Autoware, Apollo]'],
+    ['Occupancy camera (L2++)',8,8,'Sản phẩm Trung Quốc, Tesla, Apollo [FlashOcc, Tesla-E2E-talk, Apollo]'],
+    ['Bản đồ online, không HD map (L4 → L2++)',6,9,'NOA Trung Quốc; L4 vẫn dùng HD map [Maps-Survey, XPeng-L4-GZ, Waymo-WFM]'],
+    ['Radar 4D imaging',7,8,'Mobileye 2026, Huawei ADS 4, Waymo thế hệ 6 [Mobileye-CES25, Huawei-ADS4, Waymo-6G]'],
+    ['FMCW LiDAR',7,8,'Aurora xe tải không người lái [Aurora-Perception, Aurora-Gen2]'],
+    ['E2E một mạng (không người lái → L2)',6,9,'FSD v14; robotaxi Tesla quy mô nhỏ [Tesla-v14, Tesla-Q3-26b]'],
+    ['VLA có suy luận ngôn ngữ (L4 → L2)',4,8,'Li/XPeng triển khai; grounding yếu [Li-MindVLA, XPeng-AIDay25, Alpamayo-R1, DriveBench]'],
+    ['World model sinh (mô phỏng, dữ liệu)',5,7,'Dùng nội bộ; chưa có benchmark chung [Waymo-WorldModel, GAIA-3, Cosmos]'],
+    ['Độ bất định / OOD có bảo đảm',4,5,'Survey, monitor PAC-style; chưa có chuẩn [Uncertainty-Review, TaskAwareRisk]'],
+    ['Metric gắn an toàn (NDS-USC, P-AP, PKL)',3,4,'Nghiên cứu [NDS-USC, P-AP, PKL]'],
+  ];
+  const t=document.getElementById('trl');
+  T.forEach(([n,a,b,c])=>{const tr=document.createElement('tr');let bar='';
+    for(let i=1;i<=9;i++)bar+='<i class="'+(i<=a?'on':(i<=b?'on2':''))+'"></i>';
+    tr.innerHTML='<td>'+n+'</td><td class="mono">'+(a===b?a:a+'–'+b)+'</td><td><div class="trl">'+bar+'</div></td><td class="small">'+c+'</td>';t.appendChild(tr)});
+})();
+
+/* ---------- 5.2 AV table ---------- */
+(function(){
+  const R=[
+    [8,'header: timestamp_capture, timestamp_publish, seq, frame_id',0,'Mọi khối','Có trong mọi stack (ROS 2 header)','Latency p99 bị chặn + L-AP [P-AP]'],
+    [1,'cipv: distance, rel_velocity, TTC',0,'AEB/ACC trực tiếp, Planning','Radar–camera fusion mức vật thể','Tầm xa > 150 m bằng camera'],
+    [1,'objects: pose, shape, velocity (VRU ngày + đêm)',0,'AEB, Prediction, Planning','CenterPoint, BEVFusion, StreamPETR, Sparse4D (Autoware)','Ánh sáng yếu, hoàng hôn [NatComms2024]'],
+    [4,'lanes: polyline, type',0,'LKA, Planning','Detector làn; MapTRv2','—'],
+    [6,'sensor_health: ok | degraded | blocked',1,'Giám sát an toàn, HMI','Phát hiện che/bẩn; NCAP chấm 2/5 phút','Nhận ra suy giảm khi chói, sương [NHTSA-EA26-002]'],
+    [3,'objects.id (UUID ổn định), existence_prob, age',1,'Prediction, Planning','Kalman tracker (Autoware multi_object_tracker)','Tracking query-based end-to-end'],
+    [3,'attributes: turn_signal, brake_light (cut-in/out)',1,'Planning','Có trong sản phẩm L2/L3','Độ tin cậy thuộc tính ở tầm xa'],
+    [7,'driver_state: attention, takeover_ready',1,'HMI','DMS (R171)','—'],
+    [4,'signs[]: type, value, lane_ids',1,'Planning','TSR','Gán biển cho làn phức tạp'],
+    [4,'map: lanes, topology, crosswalks, stop_lines',2,'Prediction, Planning','MapTRv2, StreamMapNet, SD prior (L2++ sản xuất)','Map uncertainty (+15% prediction) [MapUnc]'],
+    [4,'traffic_lights[]: color, arrow, flashing, lane_ids',2,'Planning','Pipeline TLR dùng map (Apollo, Autoware)','VLM cho ngữ nghĩa phức tạp: grounding yếu [DriveBench]'],
+    [1,'objects.covariance (pose, vel, accel)',2,'Prediction, Planning','Xuất từ Kalman tracker','Covariance đã calib, nhất quán [ClassUnc]'],
+    [2,'occupancy: occupied | free | unknown + class UNKNOWN',3,'Planning, Giám sát an toàn','Occupancy grid + clustering hình học; FlashOcc','Occupancy camera cho long tail; RayIoU; flow'],
+    [3,'predicted_paths[] (path, dt, confidence)',3,'Planning','Prediction dựa trên map (Autoware, Apollo)','Prediction bền với lỗi perception thật [MFEval]'],
+    [5,'class[].prob + existence_prob đã calib',3,'Planning, Giám sát an toàn','Có trường dữ liệu; calib chưa có chuẩn','Truyền độ bất định vào planner [ClassUnc]'],
+    [6,'detection_range[sector] (m)',3,'Giám sát an toàn, Planning (giới hạn tốc độ)','R157 bắt buộc; hãng L3 có làm, ít công bố','Ước lượng tầm online có bảo đảm'],
+    [7,'odd_flags: weather, illumination, construction',3,'Giám sát an toàn, HMI, Ghi dữ liệu','Phân loại thời tiết/ánh sáng cơ bản','Phát hiện ODD đầy đủ theo ISO 34503'],
+    [8,'model_version, sensors_used (truy vết)',3,'Ghi dữ liệu (DSSAD)','Có trong quy trình OTA (R156)','—'],
+    [4,'attributes: emergency_lights, siren, school_bus_arm, police_gesture',4,'Planning, Hỗ trợ từ xa','Có trong robotaxi; lỗi vẫn xảy ra [Waymo-SchoolBus]','Ngữ nghĩa luật tổng quát (VLA)'],
+    [5,'ood_score, metric gắn an toàn',4,'Giám sát an toàn, safety case','—','TRL 3–5: NDS-USC, P-AP, PKL, monitor theo tác vụ [TaskAwareRisk]'],
+  ];
+  function dest(t){return t.split(',').map(x=>{x=x.trim();const l=x.toLowerCase();
+    const c=l.startsWith('prediction')?'d-pre':l.startsWith('planning')?'d-pla':l.startsWith('control')||l.startsWith('aeb')||l.startsWith('lka')?'d-con':l.startsWith('giám sát')?'d-saf':'d-oth';
+    return '<span class="dchip '+c+'">'+x+'</span>'}).join('')}
+  const t=document.getElementById('avtab');
+  R.forEach(r=>{const tr=document.createElement('tr');tr.dataset.l=r[2];
+    tr.innerHTML='<td><span class="q" style="width:22px;height:22px;min-width:22px;font-size:12px">'+r[0]+'</span></td><td class="mono">'+r[1]+'</td><td>'+LV[r[2]]+'</td><td class="small">'+dest(r[3])+'</td><td class="small">'+(r[4]==='—'?'<span class="muted">—</span>':'<span class="tag p">P</span> '+r[4])+'</td><td class="small">'+(r[5]==='—'?'<span class="muted">—</span>':'<span class="tag r">R</span> '+r[5])+'</td>';
+    t.appendChild(tr)});
+  function f(l){let c=0;t.querySelectorAll('tr[data-l]').forEach(tr=>{const v=+tr.dataset.l<=l;tr.style.display=v?'':'none';c+=v});document.getElementById('avcount').textContent=c+' trường bắt buộc'}f(4);
+  document.querySelectorAll('#lvbar2 button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#lvbar2 button').forEach(x=>x.classList.toggle('on',x===b));f(+b.dataset.l)});
+})();
+
+/* ---------- linkify citations in JS-built tables ---------- */
+(function(){
+  const ids=new Set([...document.querySelectorAll('ol.refs li')].map(li=>li.id.slice(4)));
+  document.querySelectorAll('#mx td, #avtab td, #trl td').forEach(td=>{
+    td.innerHTML=td.innerHTML.replace(/\[([^\]<>]+)\]/g,(m,g)=>{const p=g.split(',').map(x=>x.trim());
+      return p.every(x=>ids.has(x))?'['+p.map(x=>'<a class="cite" href="#ref-'+x+'">'+x+'</a>').join(', ')+']':m});
+  });
+})();
+</script>
+
+
+</body>
+</html>
