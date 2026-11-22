@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khi JEPA học bản đồ latent: đánh đổi giữa content và geometry</title>
+<meta name="description" content="Tóm tắt dễ hiểu paper The Content–Geometry Tradeoff in World Models (Slow SVReg): SVReg chống sụp đổ, slow channels và gated residual giữ vật đứng yên. Có sơ đồ minh họa.">
+<meta name="author" content="Lê Tuân">
+<link rel="canonical" href="https://nautel.github.io/slow_svreg_vi.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Khi JEPA học bản đồ latent: đánh đổi giữa content và geometry">
+<meta property="og:description" content="Tóm tắt dễ hiểu paper The Content–Geometry Tradeoff in World Models (Slow SVReg): SVReg chống sụp đổ, slow channels và gated residual giữ vật đứng yên. Có sơ đồ minh họa.">
+<meta property="og:url" content="https://nautel.github.io/slow_svreg_vi.html">
+<meta property="og:locale" content="vi_VN">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Khi JEPA học bản đồ latent: đánh đổi giữa content và geometry","inLanguage":"vi","author":{"@type":"Person","name":"Lê Tuân","url":"https://nautel.github.io/"},"dateModified":"2026-11-23","url":"https://nautel.github.io/slow_svreg_vi.html"}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600&family=Source+Code+Pro:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false})"></script>
+<style>
+/* Mẫu 10 "Lớn & thoáng" của blog nautel.github.io (lấy từ build-themes.js) */
+:root{--bg:#f7f7f5;--card:#fff;--fg:#1d1f23;--muted:#5d6470;--line:#d9dce1;--soft:#eef0f3;--accent:#2563eb;--warn:#b91c1c;--edge:#b9bec7;--t10:#1757c4}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121417;--card:#1b1e23;--fg:#e7e9ed;--muted:#9aa2ae;--line:#30353d;--soft:#23272e;--accent:#60a5fa;--warn:#f87171;--edge:#454c57;--t10:#79b0ff;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121417;--card:#1b1e23;--fg:#e7e9ed;--muted:#9aa2ae;--line:#30353d;--soft:#23272e;--accent:#60a5fa;--warn:#f87171;--edge:#454c57;--t10:#79b0ff;color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);--mono:"Source Code Pro",ui-monospace,monospace}
+body.t10{--accent:var(--t10);--col:740px;font:300 19px/1.6 "Lexend",sans-serif}
+body.t10 b,body.t10 strong,body.t10 th{font-weight:600}
+a{color:var(--accent)}
+header.top,main,nav.toc{max-width:var(--col,740px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{padding-top:32px;padding-bottom:12px}
+main{padding-bottom:64px}
+h1,h2{text-wrap:balance}
+header.top h1{font:600 42px/1.15 "Lexend",sans-serif;letter-spacing:-.02em;margin:0 0 6px}
+@media(max-width:600px){header.top h1{font-size:30px}}
+h2{font:600 27px/1.3 "Lexend",sans-serif;margin:0 0 10px}
+h2 .num{margin-right:.35em}
+h2 .chg{color:var(--warn);margin-right:.25em}
+section{margin:72px 0 0}
+.themebtn{float:right;font-size:13px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;min-height:28px}
+.sitebar{margin:0 0 26px}
+.sitebar .brand{display:inline-block;font-size:30px;font-weight:700;line-height:1.2;color:var(--fg);text-decoration:none;margin:0 0 10px}
+.sitebar nav{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:17px}.sitebar nav a{text-decoration:none}
+.byline{color:var(--muted);font-size:.9em;margin:2px 0 10px}
+nav.toc{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:15px}
+nav.toc a{text-decoration:none}
+p{margin:0 0 14px}
+.notebox{border-left:4px solid var(--accent);background:var(--soft);padding:10px 14px;border-radius:6px;margin:12px 0}
+.notebox ul{margin:6px 0 0;padding-left:20px}
+.formula{overflow-x:auto;overflow-y:hidden}
+figure{margin:16px 0}figcaption{font-size:14px;color:var(--muted);text-align:center;margin-top:6px}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scrollx svg{min-width:540px}
+.wide{width:min(1000px,calc(100vw - 48px));position:relative;left:50%;transform:translateX(-50%)}
+@media(max-width:1040px){.wide{width:100%;left:0;transform:none}}
+.red{color:var(--warn);font-weight:600}
+ul.tight{margin:8px 0;padding-left:22px}ul.tight li{margin:6px 0}
+h3.sub{font:600 19px/1.3 "Lexend",sans-serif;margin:24px 0 6px}
+ol.steps{margin:6px 0 16px;padding-left:24px}ol.steps li{margin:6px 0}
+table.ex{border-collapse:collapse;width:100%;font-size:15px;margin:4px 0 8px}
+table.ex th,table.ex td{border-bottom:1px solid var(--line);padding:7px 10px 7px 0;text-align:left;vertical-align:top}
+table.ex th{color:var(--muted);font-weight:600;font-size:14px}
+table.ex td:nth-child(-n+3){white-space:nowrap;font-variant-numeric:tabular-nums}
+table.ex td.hi{color:var(--warn);font-weight:600}
+a.cite{text-decoration:none}a.cite:hover{text-decoration:underline}
+.refs li:target{background:color-mix(in srgb,var(--accent) 15%,transparent);border-radius:4px}
+.refs{font-size:14px;padding-left:22px;margin:8px 0}.refs li{margin:5px 0;word-break:break-word}
+/* hình */
+figure svg{width:100%;height:auto;display:block}
+figure svg text{font-family:"Lexend",sans-serif;font-weight:400;fill:var(--fg);font-size:13px}
+svg .bx{fill:var(--card);stroke:var(--edge);stroke-width:1.3}
+svg .ln{stroke:var(--fg);stroke-width:1.4;fill:none}
+svg .mu{fill:var(--muted)}svg .rd{fill:var(--warn);font-weight:600}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.trio figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px}
+.trio figcaption{text-align:left;color:var(--fg);font-size:13.5px}
+/* kết quả */
+.res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin:8px 0 16px}
+.grp h3{font-size:15px;font-weight:600;margin:0 0 8px;min-height:2.6em;line-height:1.3}
+.row{display:grid;grid-template-columns:6.6em minmax(0,1fr) 3.6em;gap:6px;align-items:center;font-size:14px;margin-bottom:6px}
+.bar{height:14px;background:var(--soft);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--muted)}
+.bar i.best{background:var(--accent)}
+.val{text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:640px){.trio,.res{grid-template-columns:minmax(0,1fr)}.grp h3{min-height:0}}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media print{.themebtn,.sitebar,nav.toc{display:none!important}.wide{width:100%!important;left:0!important;transform:none!important}figure{break-inside:avoid}}
+</style>
+</head>
+<body class="t10">
+<header class="top">
+  <button class="themebtn" id="themebtn" type="button">Sáng / Tối</button>
+  <div class="sitebar"><a class="brand" href="/">Lê Tuân</a><nav aria-label="Điều hướng trang"><a href="/">Trang chủ</a><a href="/#blog">Blog</a></nav></div>
+  <h1>Khi JEPA học bản đồ latent: đánh đổi giữa content và geometry</h1>
+  <p class="byline">Lê Tuân · Cập nhật 23/11/2026 · Đọc 3 phút</p>
+</header>
+<nav class="toc" aria-label="Mục lục"><a href="#intro">Mở đầu</a><a href="#bai-toan">1. Bài toán</a><a href="#svreg">2. SVReg</a><a href="#kenh-cham">3. Slow channels</a><a href="#gated">4. Gated residual</a><a href="#ket-qua">5. Kết quả</a><a href="#key-takeaways">6. Key takeaways</a><a href="#refs">Tài liệu tham khảo</a></nav>
+<main id="main">
+
+<section id="intro">
+  <h2>Mở đầu</h2>
+  <p>Paper <a class="cite" href="#ref1">[1]</a> huấn luyện một JEPA có điều kiện hành động. Mô hình dự đoán latent của khung hình kế tiếp. Paper thêm ba thay đổi nhỏ. Kết quả: latent thành một bản đồ tốt cho planner, và mô hình không quên vật đứng yên.</p>
+  <figure class="wide scrollx">
+  <svg viewBox="0 0 760 252" role="img" aria-label="Sơ đồ một bước huấn luyện JEPA với ba thay đổi của paper; biểu tượng ngọn lửa đánh dấu khối được huấn luyện">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--fg)"/></marker></defs>
+    <g class="bx">
+      <rect class="bx" x="20" y="40" width="100" height="48" rx="8"/><rect class="bx" x="150" y="40" width="110" height="48" rx="8"/>
+      
+      <rect class="bx" x="20" y="170" width="100" height="48" rx="8"/><rect class="bx" x="150" y="170" width="110" height="48" rx="8"/>
+    </g>
+    <rect x="440" y="40" width="130" height="48" rx="8" style="fill:var(--card);stroke:var(--warn);stroke-width:2"/>
+    <g text-anchor="middle">
+      <text x="70" y="69">Ảnh t</text><text x="205" y="69">Encoder</text>
+      <text x="345" y="90">z(t)</text><text x="505" y="69">Predictor</text>
+      <text x="670" y="90">ẑ(t+1) dự đoán</text>
+      <text x="70" y="199">Ảnh t+1</text><text x="205" y="199">Encoder</text>
+      <text x="670" y="220">z(t+1) thật</text>
+    </g>
+    <g id="cells"></g>
+    <g class="ln">
+      <path class="ln" d="M120 64H148" marker-end="url(#ah)"/><path class="ln" d="M260 64H296" marker-end="url(#ah)"/>
+      <path class="ln" d="M396 64H438" marker-end="url(#ah)"/><path class="ln" d="M570 64H618" marker-end="url(#ah)"/>
+      <path class="ln" d="M120 194H148" marker-end="url(#ah)"/><path class="ln" d="M260 194H618" marker-end="url(#ah)"/>
+      <path class="ln" d="M505 20V38" marker-end="url(#ah)"/>
+      <path class="ln" d="M205 92V166" marker-start="url(#ah)" marker-end="url(#ah)" stroke-dasharray="5 4"/>
+      <path class="ln" d="M670 98V184" marker-start="url(#ah)" marker-end="url(#ah)" stroke-dasharray="4 3"/>
+    </g>
+    <text x="505" y="15" text-anchor="middle">hành động a(t)</text>
+    <g class="fire" style="font-size:13px" text-anchor="middle"><text x="249" y="56">🔥</text><text x="559" y="56">🔥</text><text x="249" y="186">🔥</text></g>
+    <text x="20" y="246" style="font-size:12px"><tspan>🔥</tspan><tspan class="mu" dx="6">khối được cập nhật khi train: encoder và predictor (gồm cả gate c)</tspan></text>
+    <text class="mu" x="197" y="125" text-anchor="end" style="font-size:12px">dùng chung</text>
+    <text class="mu" x="197" y="141" text-anchor="end" style="font-size:12px">trọng số</text>
+    <text class="mu" x="430" y="186" text-anchor="middle" style="font-size:12px">tạo target (không dự đoán pixel)</text>
+    <text x="660" y="125" text-anchor="end">so sánh</text>
+    <text x="660" y="141" text-anchor="end" style="font-size:12px">L_pred</text>
+    <text class="rd" x="345" y="110" text-anchor="middle">SVReg</text>
+    <text class="rd" x="345" y="126" text-anchor="middle" style="font-size:12px;font-weight:400">trải latent mọi hướng</text>
+    <text class="rd" x="398" y="32" text-anchor="end" style="font-size:12px">slow channels (1/8)</text>
+    <text class="rd" x="505" y="110" text-anchor="middle">gated residual</text>
+    <text class="rd" x="505" y="126" text-anchor="middle" style="font-size:12px;font-weight:400">chép z(t), sửa phần đổi</text>
+  </svg>
+  <figcaption>Hình 1. Một bước huấn luyện. Mũi tên nét đứt giữa hai encoder: chúng là một mạng, dùng chung trọng số. Ảnh t+1 chỉ dùng để tạo target. Màu đỏ là ba thay đổi của paper.</figcaption>
+  </figure>
+</section>
+
+<section id="bai-toan">
+  <h2><span class="num">1.</span>Bài toán</h2>
+  <p>Dữ liệu là ảnh và hành động của một robot chạy ngẫu nhiên. Không có nhãn. Không có reward. Mô hình chỉ học một việc: latent dự đoán phải gần latent thật.</p>
+  <div class="formula">$$\mathcal{L}_{\text{pred}} = \big\lVert\, \hat{z}_{t+1} - z_{t+1} \,\big\rVert_2^{2}$$</div>
+  <p>Có một rủi ro. Encoder có thể biến mọi ảnh thành cùng một điểm. Khi đó loss bằng 0, nhưng latent vô dụng. Ta gọi lỗi này là <b>sụp đổ</b>.</p>
+  <div class="notebox">Mục tiêu cuối là planner. Planner thử nhiều chuỗi hành động trong latent. Nó chọn chuỗi đưa latent gần ảnh đích nhất.</div>
+</section>
+
+<section id="svreg">
+  <h2><span class="num">2.</span>SVReg: trải latent theo mọi hướng</h2>
+  <div class="formula">$$\mathcal{R}_{\text{SVReg}} = \mathbb{E}_{u}\Big[\max\!\big(0,\; 1-\operatorname{std}(z^{\top}u)\big)^{2}\Big]$$</div>
+  <p>Chọn ngẫu nhiên nhiều hướng \(u\). Chiếu các latent lên mỗi hướng. Nếu độ trải \(\operatorname{std}(z^{\top}u)\) theo một hướng nhỏ hơn 1, mô hình bị phạt.</p>
+  <p>\(\mathcal{R}_{\text{SVReg}}\) là mức phạt. Giá trị nhỏ là tốt. Nó bằng 0 khi mọi hướng đều trải ít nhất 1. SVReg (cùng với việc bỏ stop-gradient) chống sụp đổ.</p>
+  <h3 class="sub">Đọc công thức từ trong ra ngoài</h3>
+  <ol class="steps">
+    <li><b>\(z^{\top}u\)</b>: chiếu mỗi latent lên \(u\). Mỗi latent cho ra một số. \(N\) latent cho ra \(N\) số, giống \(N\) cái bóng trên một đường thẳng.</li>
+    <li><b>\(\operatorname{std}(z^{\top}u)\)</b>: độ lệch chuẩn của \(N\) số đó. Nó cho biết các bóng trải rộng bao nhiêu theo hướng \(u\).</li>
+    <li><b>\(1-\operatorname{std}\)</b>: phần còn thiếu so với ngưỡng 1.</li>
+    <li><b>\(\max(0,\cdot)\)</b>: nếu std đạt 1 trở lên, phần thiếu bằng 0. Mô hình không bị phạt, và cũng không được thưởng khi trải rộng hơn. Vì vậy công thức chỉ đặt một sàn, không ép latent theo hình dạng nào.</li>
+    <li><b>\((\cdot)^2\)</b>: bình phương làm phần thiếu lớn bị phạt nặng hơn nhiều so với phần thiếu nhỏ.</li>
+    <li><b>\(\mathbb{E}_u\)</b>: lấy trung bình mức phạt trên tất cả các hướng \(u\).</li>
+  </ol>
+  <div class="scrollx"><table class="ex">
+    <thead><tr><th>Độ trải theo hướng \(u\)</th><th>Phần thiếu</th><th>Mức phạt</th><th>Ý nghĩa</th></tr></thead>
+    <tbody>
+      <tr><td>std = 0</td><td>1</td><td class="hi">1</td><td>Sụp đổ theo hướng này. Phạt lớn nhất.</td></tr>
+      <tr><td>std = 0.5</td><td>0.5</td><td>0.25</td><td>Trải chưa đủ.</td></tr>
+      <tr><td>std = 0.9</td><td>0.1</td><td>0.01</td><td>Gần đạt. Phạt rất nhỏ.</td></tr>
+      <tr><td>std = 1.3</td><td>0</td><td>0</td><td>Đạt. Trải rộng hơn cũng không được thưởng thêm.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="notebox"><b>Tại sao dùng hướng ngẫu nhiên?</b> Nếu chỉ kiểm tra từng ô (từng trục), mô hình có thể lách luật: hai ô chép giá trị của nhau. Mỗi ô vẫn trải đủ 1. Nhưng theo hướng chéo \(u = (1,-1)/\sqrt{2}\), mọi bóng rơi vào cùng một điểm, nên std bằng 0. Hướng ngẫu nhiên bắt được lỗi này (hình giữa bên dưới).</div>
+  <div class="trio">
+    <figure><svg viewBox="0 0 200 150" id="pa"></svg><figcaption><span class="red">Sụp đổ.</span> Mọi ảnh là một điểm. Phạt lớn nhất.</figcaption></figure>
+    <figure><svg viewBox="0 0 200 150" id="pb"></svg><figcaption><span class="red">Hai ô chép nhau.</span> Theo hướng u, các bóng chồng lên nhau. Vẫn bị phạt.</figcaption></figure>
+    <figure><svg viewBox="0 0 200 150" id="pc"></svg><figcaption><b>Đạt.</b> Mọi hướng trải ít nhất 1. Phạt bằng 0.</figcaption></figure>
+  </div>
+</section>
+
+<section id="kenh-cham">
+  <h2><span class="num">3.</span>Slow channels: một ngăn để nhớ vật đứng yên</h2>
+  <div class="formula">$$\mathcal{R}_{\text{slow}} = \frac{\mathbb{E}\,\lVert b_{t+1} - b_{t} \rVert^{2}}{\operatorname{tr}\,\mathrm{Var}(b)}$$</div>
+  <p>SVReg làm mô hình bỏ qua thứ khó đoán. Một khối nằm yên rồi bị đẩy bất ngờ là thứ khó đoán. Vì vậy mô hình hay xóa khối khỏi latent.</p>
+  <p>Paper dành 1/8 số ô cuối của latent cho slow channels \(b\). Các ô này bị phạt nếu chúng thay đổi nhiều giữa hai khung liên tiếp. Phép chia cho phương sai ngăn mô hình ép \(b\) về 0.</p>
+  <h3 class="sub">\(\operatorname{tr}\,\mathrm{Var}(b)\) là gì?</h3>
+  <ol class="steps">
+    <li><b>\(b\)</b>: phần slow channels của latent. Với latent 128 số, \(b\) có \(128/8 = 16\) số.</li>
+    <li><b>\(\mathrm{Var}(b)\)</b>: ma trận hiệp phương sai của \(b\), tính trên cả batch (nhiều ảnh, nhiều cảnh khác nhau). Đây là ma trận \(16 \times 16\).</li>
+    <li><b>Đường chéo</b> của ma trận này là phương sai của từng channel: \(\mathrm{Var}(b_1), \dots, \mathrm{Var}(b_{16})\).</li>
+    <li><b>\(\operatorname{tr}\)</b> (trace) là tổng đường chéo: \(\operatorname{tr}\,\mathrm{Var}(b) = \sum_i \mathrm{Var}(b_i)\). Nó cho biết \(b\) trải rộng bao nhiêu giữa các cảnh.</li>
+  </ol>
+  <p>Tử số đo \(b\) thay đổi bao nhiêu giữa hai khung liền nhau. Mẫu số đo \(b\) khác nhau bao nhiêu giữa các cảnh. Tỷ số nhỏ có nghĩa là: \(b\) gần như đứng yên theo thời gian, nhưng vẫn khác nhau giữa các cảnh. Đó đúng là thứ cần để nhớ vị trí một khối.</p>
+  <div class="notebox"><b>Tại sao phải chia?</b> Nếu không chia, mô hình có một cách lách luật: nhân \(b\) với một số rất nhỏ, ví dụ 0.1. Tử số giảm 100 lần, nên phạt gần bằng 0. Nhưng \(b\) cũng mất hết thông tin. Khi chia cho \(\operatorname{tr}\,\mathrm{Var}(b)\), mẫu số cũng giảm 100 lần. Tỷ số không đổi. Vì vậy thu nhỏ \(b\) không giúp giảm phạt.</div>
+  <figure class="scrollx"><svg viewBox="0 0 560 180" id="slow" role="img" aria-label="Ô thường dao động, slow channels đứng yên rồi nhảy một bậc"></svg>
+  <figcaption>Hình 2. Ô thường theo cánh tay robot và dao động liên tục. Slow channels theo khối: đứng yên, chỉ đổi khi khối bị đẩy.</figcaption></figure>
+</section>
+
+<section id="gated">
+  <h2><span class="num">4.</span>Gated residual: chép lại, chỉ sửa phần thay đổi</h2>
+  <div class="formula">$$\hat{z}_{t+1} = z_{t} + c \odot f(z_{t}, a_{t})$$</div>
+  <p>Predictor không viết lại latent từ đầu. Nó chép \(z_t\). Sau đó nó cộng phần thay đổi \(f\) do hành động gây ra.</p>
+  <p>Khối Predictor trong Hình 1 chính là toàn bộ công thức này (khung đỏ trong Hình 3). \(f\) là mạng nơ-ron bên trong Predictor. Nó nhận \(z_t\) và \(a_t\), và tính phần thay đổi.</p>
+  <p>Mỗi ô có một gate \(c\) riêng. Gate bắt đầu ở 0.1 và tự học. Ô của robot học gate lớn. Ô của khối đứng yên giữ gate nhỏ. Như vậy mô hình đoán đúng các ô đó gần như miễn phí, và không cần xóa chúng.</p>
+  <figure class="scrollx"><svg viewBox="0 0 560 180" id="gr" role="img" aria-label="Sơ đồ gated residual"></svg>
+  <figcaption>Hình 3. Khung đỏ là Predictor của Hình 1. Bên trong có ba phần: phép chép (đường thẳng), mạng f và gate c. 🔥: f và c được học. Cột dưới là gate c của từng ô: ô robot đổi nhiều, các ô khác gần như giữ nguyên.</figcaption></figure>
+</section>
+
+<section id="ket-qua">
+  <h2><span class="num">5.</span>Kết quả</h2>
+  <p>Tỷ lệ lập kế hoạch thành công (%), trung bình 6 lần huấn luyện. SG là baseline dùng stop-gradient.</p>
+  <div class="res" id="res"></div>
+</section>
+
+
+<section id="key-takeaways">
+  <h2><span class="num">6.</span>Key takeaways</h2>
+  <ul class="tight">
+    <li>World model cho planning phải có hai tính chất:
+      <ul class="tight">
+        <li><b>Geometry.</b> Khoảng cách giữa hai latent cho biết tiến độ tới đích.</li>
+        <li><b>Content.</b> Latent giữ thông tin về mọi vật. Điều này gồm cả vật đứng yên.</li>
+      </ul></li>
+    <li><b>SVReg cho geometry tốt.</b> SVReg đặt một mức phương sai tối thiểu theo các hướng ngẫu nhiên. Vì vậy, latent không sụp đổ. Mô hình không cần stop-gradient.</li>
+    <li><b>SVReg gây ra một lỗi về content.</b> Mô hình xóa các vật khó dự đoán. Ví dụ: một khối mà robot đẩy.</li>
+    <li><b>Hai thay đổi sửa lỗi này:</b>
+      <ul class="tight">
+        <li>Slow channels giữ thông tin về các vật đứng yên.</li>
+        <li>Gated residual predictor chép latent hiện tại. Predictor chỉ thay đổi các phần mà hành động thay đổi.</li>
+      </ul></li>
+    <li><b>Slow SVReg cho tỷ lệ planning thành công cao nhất trên cả ba bài toán:</b> mê cung 92.9%, PushT 87.3%, Cube 89.1%.</li>
+  </ul>
+</section>
+
+<section id="refs">
+  <h2>Tài liệu tham khảo</h2>
+  <ol class="refs">
+    <li id="ref1">Ren, Wang, Hoang, Kuang, LeCun. <i>The Content–Geometry Tradeoff in World Models: When JEPA Learns Latent Maps</i> (Slow SVReg). NYU và AMI Labs, 2026. Số liệu từ Bảng 1–3 và Hình 1. <a href="https://agenticlearning.ai/content-geometry-tradeoff/">agenticlearning.ai/content-geometry-tradeoff</a></li>
+  </ol>
+</section>
+</main>
+
+<script>
+(function(){
+  var b=document.getElementById('themebtn'), r=document.documentElement, t=null;
+  try{t=localStorage.getItem('hkh-theme')}catch(e){}
+  if(t) r.setAttribute('data-theme',t);
+  b.onclick=function(){var dark=r.getAttribute('data-theme')==='dark'||(!r.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
+    var n=dark?'light':'dark'; r.setAttribute('data-theme',n); try{localStorage.setItem('hkh-theme',n)}catch(e){}};
+})();
+(function(){
+let s=12345;
+const rnd=()=>(s=s*16807%2147483647)/2147483647;
+const g=()=>{let u=0;for(let i=0;i<6;i++)u+=rnd();return (u-3)/1.2};
+const $=id=>document.getElementById(id);
+const A='var(--accent)',W='var(--warn)',F='var(--fg)',M='var(--muted)',L='var(--line)',C='var(--card)';
+const strip=(x0,y)=>Array.from({length:8},(_,i)=>`<rect x="${x0+i*11.5}" y="${y}" width="10" height="12" rx="2" style="fill:${i===7?W:A}"/>`).join('');
+$('cells').innerHTML=strip(299,58)+strip(624,58)+strip(624,188);
+const axis=`<path d="M20 75H180M100 10V140" style="stroke:${L};fill:none"/>`;
+const dots=p=>p.map(([x,y])=>`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" style="fill:${F}"/>`).join('');
+$('pa').innerHTML=axis+`<circle cx="100" cy="75" r="6" style="fill:${W}"/><text x="110" y="64">mọi ảnh</text>`;
+const pb=Array.from({length:34},()=>{const t=rnd()*2-1;return [100+62*t+g()*2,75-52*t+g()*2]});
+$('pb').innerHTML=axis+`<path d="M38 22L162 128" style="stroke:${W};stroke-width:2;fill:none"/><text class="rd" x="160" y="120">u</text>`+dots(pb);
+const pc=Array.from({length:42},()=>[100+Math.max(-70,Math.min(70,g()*36)),75+Math.max(-58,Math.min(58,g()*30))]);
+$('pc').innerHTML=dots(pc)+[0,60,120].map(a=>{const r=a*Math.PI/180,dx=Math.cos(r)*74,dy=Math.sin(r)*60;return `<path d="M${100-dx} ${75-dy}L${100+dx} ${75+dy}" style="stroke:${A};stroke-width:1.4;fill:none" stroke-dasharray="4 3"/>`}).join('');
+{const L0=120,R=540,n=48;let zig='',slow='';
+for(let i=0;i<n;i++){const x=L0+(R-L0)*i/(n-1);zig+=(i?'L':'M')+x.toFixed(1)+' '+(52+Math.sin(i*0.9)*14+g()*6).toFixed(1);slow+=(i?'L':'M')+x.toFixed(1)+' '+((i<30?132:100)+g()*1).toFixed(1)}
+const px=L0+(R-L0)*29.5/(n-1);
+$('slow').innerHTML=`<path d="M${L0} 156H${R}" style="stroke:${L};fill:none"/>
+<text x="10" y="56">ô thường</text><text class="mu" x="10" y="72" style="font-size:11px">(cánh tay)</text>
+<text class="rd" x="10" y="112">slow</text><text class="rd" x="10" y="127">channels b</text><text class="mu" x="10" y="142" style="font-size:11px">(khối)</text>
+<path d="${zig}" style="stroke:${A};stroke-width:2;fill:none"/>
+<path d="${slow}" style="stroke:${W};stroke-width:2.4;fill:none"/>
+<path d="M${px} 20V156" style="stroke:${M};fill:none" stroke-dasharray="3 3"/>
+<text x="${px+6}" y="20" style="font-size:12px">khối bị đẩy</text>
+<text class="mu" x="${R}" y="172" text-anchor="end" style="font-size:12px">khung hình →</text>`;}
+{const c=[0.9,0.1,0.12,0.15,0.1,0.55,0.1,0.06];
+const bars=c.map((v,i)=>`<rect x="${140+i*16}" y="${172-v*40}" width="11" height="${v*40}" style="fill:${v>0.5?W:M}"/>`).join('');
+$('gr').innerHTML=`<defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:${F}"/></marker></defs>
+<rect x="140" y="10" width="278" height="112" rx="10" style="fill:none;stroke:${W};stroke-width:2"/>
+<text class="rd" x="152" y="27" style="font-size:12px">Predictor</text><text x="404" y="28" text-anchor="middle" style="font-size:11px">🔥</text>
+${strip(24,34)}<text x="70" y="66" text-anchor="middle">z(t)</text>
+${strip(440,34)}<text x="486" y="66" text-anchor="middle">ẑ(t+1)</text>
+<path class="ln" d="M120 40H362" marker-end="url(#ah2)"/>
+<text class="mu" x="270" y="32" text-anchor="middle" style="font-size:12px">sao chép</text>
+<circle cx="180" cy="40" r="3" style="fill:${F}"/><path class="ln" d="M180 40V88H208" marker-end="url(#ah2)"/>
+<circle class="bx" cx="375" cy="40" r="12"/><text x="375" y="45" text-anchor="middle" style="font-size:16px">+</text>
+<path class="ln" d="M387 40H436" marker-end="url(#ah2)"/>
+<rect class="bx" x="210" y="80" width="90" height="34" rx="8"/><text x="255" y="102" text-anchor="middle">f(z, a)</text>
+<text x="100" y="110" text-anchor="end">a(t)</text><path class="ln" d="M106 106H208" marker-end="url(#ah2)"/>
+<path class="ln" d="M300 97H361" marker-end="url(#ah2)"/>
+<circle cx="375" cy="97" r="13" style="fill:${C};stroke:${W};stroke-width:2"/><text class="rd" x="375" y="101" text-anchor="middle" style="font-size:12px">×c</text>
+<path d="M375 84V54" style="stroke:${W};stroke-width:1.6;fill:none" marker-end="url(#ah2)"/>
+${bars}<path d="M136 172H272" style="stroke:${L};fill:none"/>
+<text class="rd" x="280" y="168" style="font-size:12px;font-weight:400">gate c của từng ô</text>
+<text class="mu" x="145" y="133" text-anchor="middle" style="font-size:11px">robot</text>`;}
+const groups=[
+ {t:'Mê cung Medium, góc nhìn thứ nhất, đích khó',v:[['SG',21.2],['SVReg',75.3],['Slow SVReg',92.9]]},
+ {t:'PushT: đẩy khối chữ T',v:[['SG',44.0],['SVReg',75.0],['Slow SVReg',87.3]]},
+ {t:'Cube: cầm và nâng khối',v:[['SG',80.4],['SVReg',76.9],['Slow SVReg',89.1]]}];
+$('res').innerHTML=groups.map(gr=>`<div class="grp"><h3>${gr.t}</h3>${gr.v.map(([n,x])=>`<div class="row"><span>${n}</span><div class="bar"><i class="${n==='Slow SVReg'?'best':''}" style="width:${x}%"></i></div><span class="val">${x.toFixed(1)}%</span></div>`).join('')}</div>`).join('');
+})();
+</script>
+</body>
+</html>
