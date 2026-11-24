@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event Edge Space</title>
+<meta name="description" content="Tóm tắt dễ hiểu x2-Fusion (CVPR 2026): pretrain Event Edge Encoder, đưa camera, event và LiDAR về cùng Event Edge Space bằng projection, nội suy và loss căn chỉnh có stop-gradient. Có sơ đồ với dữ liệu DSEC thật.">
+<meta name="author" content="Lê Tuân">
+<link rel="canonical" href="https://nautel.github.io/x2_fusion_vi.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Event Edge Space">
+<meta property="og:description" content="Tóm tắt dễ hiểu x2-Fusion (CVPR 2026): pretrain Event Edge Encoder, đưa camera, event và LiDAR về cùng Event Edge Space bằng projection, nội suy và loss căn chỉnh có stop-gradient.">
+<meta property="og:url" content="https://nautel.github.io/x2_fusion_vi.html">
+<meta property="og:locale" content="vi_VN">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Event Edge Space","inLanguage":"vi","author":{"@type":"Person","name":"Lê Tuân","url":"https://nautel.github.io/"},"dateModified":"2026-11-24","url":"https://nautel.github.io/x2_fusion_vi.html"}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600&family=Source+Code+Pro:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false})"></script>
+<style>
+/* Mẫu 10 "Lớn & thoáng" của blog nautel.github.io */
+:root{--bg:#f7f7f5;--card:#fff;--fg:#1d1f23;--muted:#5d6470;--line:#d9dce1;--soft:#eef0f3;--accent:#2563eb;--warn:#b91c1c;--edge:#b9bec7;--t10:#1757c4;
+  --img:#2f6fd6;--img-bg:#e6efff;--lid:#1f9d6b;--lid-bg:#e3f5ec;--ev:#d9822b;--ev-bg:#fdf0e1;--fu:#7c4dd6;--fu-bg:#efe7fd}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121417;--card:#1b1e23;--fg:#e7e9ed;--muted:#9aa2ae;--line:#30353d;--soft:#23272e;--accent:#60a5fa;--warn:#f87171;--edge:#454c57;--t10:#79b0ff;color-scheme:dark;
+  --img:#6ea2ff;--img-bg:#1d2a44;--lid:#4fd19b;--lid-bg:#17332a;--ev:#f0a457;--ev-bg:#3a2a18;--fu:#b88cff;--fu-bg:#2c2242}}
+:root[data-theme="dark"]{--bg:#121417;--card:#1b1e23;--fg:#e7e9ed;--muted:#9aa2ae;--line:#30353d;--soft:#23272e;--accent:#60a5fa;--warn:#f87171;--edge:#454c57;--t10:#79b0ff;color-scheme:dark;
+  --img:#6ea2ff;--img-bg:#1d2a44;--lid:#4fd19b;--lid-bg:#17332a;--ev:#f0a457;--ev-bg:#3a2a18;--fu:#b88cff;--fu-bg:#2c2242}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);--mono:"Source Code Pro",ui-monospace,monospace}
+body.t10{--accent:var(--t10);--col:740px;font:300 19px/1.6 "Lexend",sans-serif}
+body.t10 b,body.t10 strong,body.t10 th{font-weight:600}
+a{color:var(--accent)}
+header.top,main,nav.toc{max-width:var(--col,740px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{padding-top:32px;padding-bottom:12px}
+main{padding-bottom:64px}
+h1,h2{text-wrap:balance}
+header.top h1{font:600 42px/1.15 "Lexend",sans-serif;letter-spacing:-.02em;margin:0 0 6px}
+@media(max-width:600px){header.top h1{font-size:30px}}
+h2{font:600 27px/1.3 "Lexend",sans-serif;margin:0 0 10px}
+h2 .num{margin-right:.35em}
+section{margin:72px 0 0}
+.themebtn{float:right;font-size:13px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;min-height:28px}
+.sitebar{margin:0 0 26px}
+.sitebar .brand{display:inline-block;font-size:30px;font-weight:700;line-height:1.2;color:var(--fg);text-decoration:none;margin:0 0 10px}
+.sitebar nav{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:17px}.sitebar nav a{text-decoration:none}
+.byline{color:var(--muted);font-size:.9em;margin:2px 0 10px}
+nav.toc{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:15px}
+nav.toc a{text-decoration:none}
+p{margin:0 0 14px}
+code{font-family:var(--mono);font-size:.85em;background:var(--soft);padding:1px 5px;border-radius:4px;white-space:nowrap}
+.notebox{border-left:4px solid var(--accent);background:var(--soft);padding:10px 14px;border-radius:6px;margin:12px 0}
+.notebox ul{margin:6px 0 0;padding-left:20px}
+.formula{overflow-x:auto;overflow-y:hidden}
+figure{margin:16px 0}figcaption{font-size:14px;color:var(--muted);text-align:center;margin-top:6px}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scrollx svg{min-width:540px}
+.wide{width:min(1000px,calc(100vw - 48px));position:relative;left:50%;transform:translateX(-50%)}
+@media(max-width:1040px){.wide{width:100%;left:0;transform:none}}
+.red{color:var(--warn);font-weight:600}
+ul.tight{margin:8px 0;padding-left:22px}ul.tight li{margin:6px 0}
+h3.sub{font:600 19px/1.3 "Lexend",sans-serif;margin:24px 0 6px}
+ol.steps{margin:6px 0 16px;padding-left:24px}ol.steps li{margin:6px 0}
+table.ex{border-collapse:collapse;width:100%;font-size:15px;margin:4px 0 8px}
+table.ex th,table.ex td{border-bottom:1px solid var(--line);padding:7px 10px 7px 0;text-align:left;vertical-align:top}
+table.ex th{color:var(--muted);font-weight:600;font-size:14px}
+table.ex td.mono{font-family:var(--mono);font-size:14px;white-space:nowrap}
+a.cite{text-decoration:none}a.cite:hover{text-decoration:underline}
+.refs li:target{background:color-mix(in srgb,var(--accent) 15%,transparent);border-radius:4px}
+.refs{font-size:14px;padding-left:22px;margin:8px 0}.refs li{margin:5px 0;word-break:break-word}
+/* hình */
+figure svg{width:100%;height:auto;display:block}
+figure svg text{font-family:"Lexend",sans-serif;font-weight:400;fill:var(--fg);font-size:13px}
+svg .bx{fill:var(--card);stroke:var(--edge);stroke-width:1.3}
+svg .ln{stroke:var(--fg);stroke-width:1.4;fill:none}
+svg .mu{fill:var(--muted)}svg .rd{fill:var(--warn);font-weight:600}
+svg .sm{font-size:12px} svg .xs{font-size:10.5px} svg .md{font-size:14px} svg .b{font-weight:600} svg .mono{font-family:"Source Code Pro",monospace}
+svg .bimg{fill:var(--img-bg);stroke:var(--img);stroke-width:1.5}
+svg .blid{fill:var(--lid-bg);stroke:var(--lid);stroke-width:1.5}
+svg .bev{fill:var(--ev-bg);stroke:var(--ev);stroke-width:1.5}
+svg .bfu{fill:var(--fu-bg);stroke:var(--fu);stroke-width:1.7}
+svg .bwarn{fill:var(--card);stroke:var(--warn);stroke-width:1.7}
+svg .lnw{stroke:var(--warn);stroke-width:1.7;fill:none;stroke-dasharray:5 4}
+svg .lab{font-size:10.5px;font-weight:600;fill:#fff}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media print{.themebtn,.sitebar,nav.toc{display:none!important}.wide{width:100%!important;left:0!important;transform:none!important}figure{break-inside:avoid}}
+.series{font-size:15px;color:var(--muted);margin:0 0 8px;line-height:1.7}.series a{text-decoration:none}.series [aria-current]{color:var(--fg);font-weight:600}.series-pn{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px 20px;font-size:16px;border-top:1px solid var(--line);margin-top:56px;padding-top:16px}.series-pn a{text-decoration:none}
+</style>
+</head>
+<body class="t10">
+<header class="top">
+  <button class="themebtn" id="themebtn" type="button">Sáng / Tối</button>
+  <div class="sitebar"><a class="brand" href="/">Lê Tuân</a><nav aria-label="Điều hướng trang"><a href="/">Trang chủ</a><a href="/#blog">Blog</a></nav></div>
+  <h1>Event Edge Space</h1>
+  <p class="byline">Lê Tuân · Cập nhật 24/11/2026 · Đọc 6 phút</p>
+  <nav class="series" aria-label="Loạt bài x2-Fusion"><span>Loạt bài x2-Fusion (CVPR 2026):</span> <span aria-current="page">1. Event Edge Space</span> · <a href="x2_fusion_fusion_vi.html">2. Reliability-aware Adaptive Fusion</a> · <a href="x2_fusion_ccl_vi.html">3. Cross-dimension Contrast Learning</a></nav>
+</header>
+<nav class="toc" aria-label="Mục lục"><a href="#intro">Mở đầu</a><a href="#buoc-1">Bước 1. Pretrain event</a><a href="#buoc-2">Bước 2. Encoder</a><a href="#buoc-3">Bước 3. Cùng kích thước</a><a href="#buoc-4">Bước 4. Cùng vị trí</a><a href="#buoc-5">Bước 5. Cùng giá trị</a><a href="#sau-do">Sau đó: ra flow</a><a href="#key-takeaways">Key takeaways</a><a href="#refs">Tài liệu tham khảo</a></nav>
+<main id="main">
+
+<section id="intro">
+  <h2>Mở đầu</h2>
+  <p>Guo và cộng sự <a class="cite" href="#ref1">[1]</a> đề xuất x2-Fusion. Phương pháp ước lượng chuyển động từ thời điểm t₁ đến t₂. Có hai loại chuyển động. <b>Optical flow</b> là chuyển động 2D của mỗi pixel. <b>Scene flow</b> là chuyển động 3D của mỗi điểm. Đầu vào đến từ ba cảm biến: camera, event camera và LiDAR.</p>
+  <p>Ba cảm biến nói ba “ngôn ngữ” khác nhau. x2-Fusion đưa cả ba về một ngôn ngữ chung trước khi trộn. Ngôn ngữ chung là <b>cạnh đang chuyển động</b>. Các tác giả gọi không gian chung này là <b>Event Edge Space</b>. Toàn bộ ý tưởng gồm 5 bước:</p>
+  <ol class="steps">
+    <li><b>Pretrain encoder cho event.</b> Encoder nhìn event của nửa đầu một cửa sổ thời gian. Nó dự đoán độ mạnh cạnh của nửa sau. Sau đó encoder bị đóng băng.</li>
+    <li><b>Cho dữ liệu qua encoder.</b> Ảnh RGB, event và LiDAR đi qua encoder riêng. Mỗi pixel (hoặc mỗi điểm) nhận một vector.</li>
+    <li><b>Điều chỉnh cho cùng kích thước.</b> Mọi vector được đưa về cùng độ dài.</li>
+    <li><b>Điều chỉnh cho cùng vị trí.</b> Ba vector được đặt vào cùng một pixel (nhánh 2D) hoặc cùng một điểm (nhánh 3D).</li>
+    <li><b>Train cho giá trị gần nhau.</b> Vector ảnh và LiDAR được kéo về gần vector event. Event đứng yên.</li>
+  </ol>
+  <p>Sau 5 bước này, ba vector đã cùng ngôn ngữ. Mô hình trộn chúng và dự đoán flow từ t₁ đến t₂.</p>
+  <figure class="wide scrollx">
+  <svg viewBox="0 0 1010 440" role="img" aria-label="Pipeline đưa ba cảm biến (ảnh dữ liệu thật DSEC) về Event Edge Space" style="min-width:720px">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--fg)"/></marker>
+      <clipPath id="c1"><rect x="8" y="12" width="148" height="111" rx="8"/></clipPath>
+      <clipPath id="c2"><rect x="8" y="140" width="148" height="111" rx="8"/></clipPath>
+      <clipPath id="c3"><rect x="8" y="268" width="148" height="111" rx="8"/></clipPath>
+    </defs>
+    <g transform="translate(0,30)">
+      <text x="82" y="-12" text-anchor="middle" class="xs mu b">ĐẦU VÀO (DSEC thật)</text>
+      <image href="images/x2_fusion/thumb_cam.jpg" x="8" y="12" width="148" height="111" preserveAspectRatio="xMidYMid slice" clip-path="url(#c1)"/>
+      <rect x="8" y="103" width="148" height="20" style="fill:var(--img)" opacity=".92" clip-path="url(#c1)"/>
+      <rect x="8" y="12" width="148" height="111" rx="8" style="fill:none;stroke:var(--img);stroke-width:2.2"/>
+      <text x="82" y="117" text-anchor="middle" class="lab">Camera · H×W×3</text>
+      <image href="images/x2_fusion/thumb_event.png" x="8" y="140" width="148" height="111" preserveAspectRatio="xMidYMid slice" clip-path="url(#c2)"/>
+      <rect x="8" y="231" width="148" height="20" style="fill:var(--ev)" opacity=".94" clip-path="url(#c2)"/>
+      <rect x="8" y="140" width="148" height="111" rx="8" style="fill:none;stroke:var(--ev);stroke-width:2.2"/>
+      <text x="82" y="245" text-anchor="middle" class="lab">Event → voxel B×H×W</text>
+      <image href="images/x2_fusion/thumb_lidar.png" x="8" y="268" width="148" height="111" preserveAspectRatio="xMidYMid slice" clip-path="url(#c3)"/>
+      <rect x="8" y="359" width="148" height="20" style="fill:var(--lid)" opacity=".94" clip-path="url(#c3)"/>
+      <rect x="8" y="268" width="148" height="111" rx="8" style="fill:none;stroke:var(--lid);stroke-width:2.2"/>
+      <text x="82" y="373" text-anchor="middle" class="lab">LiDAR · N×3</text>
+      <path class="ln" d="M156 67H208" marker-end="url(#ah)"/><path class="ln" d="M156 195H208" marker-end="url(#ah)"/><path class="ln" d="M156 323H208" marker-end="url(#ah)"/>
+    </g>
+    <g transform="translate(50,30)">
+      <text x="225" y="-12" text-anchor="middle" class="xs mu b">ENCODER</text>
+      <text x="385" y="-12" text-anchor="middle" class="xs mu b">① CÙNG ĐỘ DÀI</text>
+      <text x="567" y="-12" text-anchor="middle" class="xs mu b">② CÙNG VỊ TRÍ</text>
+      <text x="825" y="-12" text-anchor="middle" class="xs mu b">③ CÙNG NỘI DUNG</text>
+      <rect x="160" y="40" width="130" height="54" rx="8" class="bimg"/><text x="225" y="63" text-anchor="middle" class="sm">Image Enc. 🔥</text><text x="225" y="80" text-anchor="middle" class="xs mono">H×W×C_2D</text>
+      <rect x="160" y="168" width="130" height="54" rx="8" class="bev" stroke-dasharray="5 3"/><text x="225" y="191" text-anchor="middle" class="sm">Event Enc. ❄</text><text x="225" y="208" text-anchor="middle" class="xs mono">H×W×C_s</text>
+      <rect x="160" y="296" width="130" height="54" rx="8" class="blid"/><text x="225" y="319" text-anchor="middle" class="sm">LiDAR Enc. 🔥</text><text x="225" y="336" text-anchor="middle" class="xs mono">N×C_3D</text>
+      <rect x="325" y="40" width="120" height="54" rx="8" class="bx"/><text x="385" y="63" text-anchor="middle" class="sm">1×1 conv</text><text x="385" y="80" text-anchor="middle" class="xs mono">Z^I: H×W×C_s</text>
+      <rect x="325" y="168" width="120" height="54" rx="8" class="bx" stroke-dasharray="3 3"/><text x="385" y="191" text-anchor="middle" class="sm">giữ nguyên</text><text x="385" y="208" text-anchor="middle" class="xs mono">Z^E: H×W×C_s</text>
+      <rect x="325" y="296" width="120" height="54" rx="8" class="bx"/><text x="385" y="319" text-anchor="middle" class="sm">MLP</text><text x="385" y="336" text-anchor="middle" class="xs mono">Z^L: N×C_s</text>
+      <path class="ln" d="M290 67H323" marker-end="url(#ah)"/><path class="ln" d="M290 195H323" marker-end="url(#ah)"/><path class="ln" d="M290 323H323" marker-end="url(#ah)"/>
+      <rect x="480" y="40" width="175" height="135" rx="10" class="bx"/>
+      <text x="567" y="62" text-anchor="middle" class="sm b">Nhánh 2D · theo pixel</text>
+      <text x="494" y="88" class="xs mono" style="fill:var(--img)">Z^I      H×W×C</text>
+      <text x="494" y="108" class="xs mono" style="fill:var(--ev)">Z^E      H×W×C</text>
+      <text x="494" y="128" class="xs mono" style="fill:var(--lid)">Z^L,2D   H×W×C</text>
+      <text x="494" y="156" class="xs mu">LiDAR: chiếu + nội suy</text>
+      <rect x="480" y="215" width="175" height="135" rx="10" class="bx"/>
+      <text x="567" y="237" text-anchor="middle" class="sm b">Nhánh 3D · theo điểm</text>
+      <text x="494" y="263" class="xs mono" style="fill:var(--img)">Z^I,3D   N×C</text>
+      <text x="494" y="283" class="xs mono" style="fill:var(--ev)">Z^E,3D   N×C</text>
+      <text x="494" y="303" class="xs mono" style="fill:var(--lid)">Z^L      N×C</text>
+      <text x="494" y="331" class="xs mu">ảnh, event: đọc tại pixel chiếu</text>
+      <path class="ln" d="M445 67L478 90" marker-end="url(#ah)"/><path class="ln" d="M445 195L478 120" marker-end="url(#ah)"/>
+      <path class="ln" d="M445 195L478 270" marker-end="url(#ah)"/><path class="ln" d="M445 323L478 300" marker-end="url(#ah)"/>
+      <rect x="700" y="40" width="250" height="310" rx="14" class="bfu"/>
+      <text x="825" y="66" text-anchor="middle" class="md b" style="fill:var(--fu)">Event Edge Space</text>
+      <text x="825" y="92" text-anchor="middle" class="xs mono">L_align = Σ e^E(p) · D(p)</text>
+      <text x="825" y="110" text-anchor="middle" class="xs mono">D = |I−E| + |L−E| + |I−L|</text>
+      <circle cx="790" cy="170" r="11" style="fill:var(--img)"/><circle cx="825" cy="192" r="15" style="fill:var(--ev)"/><circle cx="860" cy="168" r="11" style="fill:var(--lid)"/>
+      <path class="ln" d="M799 177L811 185" marker-end="url(#ah)"/><path class="ln" d="M851 175L839 184" marker-end="url(#ah)"/>
+      <text x="825" y="232" text-anchor="middle" class="xs b">Z^E = mỏ neo cố định</text>
+      <text x="825" y="252" text-anchor="middle" class="xs">camera, LiDAR tiến về event</text>
+      <text x="825" y="282" text-anchor="middle" class="xs">✓ cùng độ dài ✓ cùng vị trí</text>
+      <text x="825" y="300" text-anchor="middle" class="xs">✓ cùng nội dung (ở chỗ có cạnh)</text>
+      <text x="825" y="330" text-anchor="middle" class="xs mu">→ hợp nhất + cross-attention</text>
+      <path class="ln" d="M655 107L698 150" marker-end="url(#ah)"/><path class="ln" d="M655 282L698 230" marker-end="url(#ah)"/>
+      <path class="lnw" d="M760 350C700 395 300 395 228 352"/>
+      <rect x="205" y="350" width="40" height="22" rx="4" class="bwarn"/><text x="225" y="366" text-anchor="middle" class="sm">⛔</text>
+      <text x="480" y="398" text-anchor="middle" class="xs rd">stop-gradient: L_align không sửa event encoder · chỉ sửa camera và LiDAR</text>
+    </g>
+  </svg>
+  <figcaption>Hình 1. Pipeline của x2-Fusion <a class="cite" href="#ref1">[1]</a>, minh họa bằng dữ liệu thật từ DSEC <a class="cite" href="#ref2">[2]</a>. 🔥 = được huấn luyện. ❄ = đóng băng. Điểm 3D được tạo từ disparity ground-truth của DSEC (tích lũy từ LiDAR).</figcaption>
+  </figure>
+  <div class="notebox">
+    <b>Ba chỗ dễ hiểu nhầm</b>
+    <ul>
+      <li><b>Bước 1 chỉ dùng event.</b> Ảnh RGB không tham gia. “Quá khứ” và “tương lai” là nửa đầu và nửa sau của <b>cùng một cửa sổ event</b>. Nhãn được tính từ event, không phải từ ảnh.</li>
+      <li><b>Encoder không cho ra một vector cho cả ảnh.</b> Nó cho ra một vector cho <b>mỗi pixel</b> (hoặc mỗi điểm LiDAR).</li>
+      <li><b>Bước 5 chưa phải là xong.</b> Loss căn chỉnh được train <b>cùng lúc</b> với loss dự đoán flow. Sau đó còn bước trộn và dự đoán flow.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="buoc-1">
+  <h2><span class="num">1.</span>Pretrain encoder cho event: đoán cạnh của nửa sau</h2>
+  <p>Bước này làm trước tiên và làm riêng. Mục tiêu: encoder event phải hiểu <b>cạnh đang chuyển động</b>. Không cần nhãn từ con người. Nhãn được tính trực tiếp từ event.</p>
+  <h3 class="sub">Nhãn: độ mạnh cạnh</h3>
+  <div class="formula">$$e^E(x,y)=\tilde A^E(x,y)\,\bigl(1-\tilde\sigma_t(x,y)\bigr)\in[0,1]$$</div>
+  <p>\(\tilde A^E\) là mức hoạt động event tại pixel. \(\tilde\sigma_t\) là phương sai thời gian của các event đó. Cả hai đã chuẩn hóa. Vì vậy, \(e^E\) cao khi pixel có <b>nhiều</b> event và các event <b>đều đặn</b> theo thời gian. Đó là dấu hiệu của một cạnh thật đang quét qua. Nhiễu nhấp nháy có nhiều event nhưng không đều, nên \(e^E\) thấp. Vùng phẳng có ít event, nên \(e^E\) cũng thấp.</p>
+  <h3 class="sub">Nhiệm vụ: nhìn nửa đầu, đoán nửa sau</h3>
+  <ol class="steps">
+    <li>Lấy một cửa sổ event. Chia nó làm hai nửa theo thời gian.</li>
+    <li><b>Đầu vào:</b> event của nửa đầu, đã voxel hóa. Encoder cho ra đặc trưng \(F^{E,\text{past}}_s\) ở nhiều tỉ lệ \(s\).</li>
+    <li>Một head nhẹ \(g_s\) dự đoán bản đồ độ mạnh cạnh của nửa sau.</li>
+    <li><b>Nhãn:</b> tính \(e^E\) từ event của nửa sau bằng công thức trên. Nửa sau không đi qua encoder.</li>
+    <li>So sánh dự đoán với nhãn bằng L1. Cộng trên mọi tỉ lệ với trọng số \(\lambda_s\).</li>
+  </ol>
+  <div class="formula">$$\mathcal{L}^E_{\text{edge}}=\sum_s\lambda_s\,\bigl\|\,g_s\!\big(F^{E,\text{past}}_s\big)-e^{E,\text{future}}_s\bigr\|_1$$</div>
+  <p><b>Tại sao đoán nửa sau?</b> Để đoán cạnh <b>sẽ</b> ở đâu, encoder phải biết cạnh đang ở đâu, đi theo hướng nào và nhanh bao nhiêu. Vì vậy, đặc trưng học được chứa cả hình dạng cạnh và chuyển động.</p>
+  <p>Sau bước này, encoder event bị <b>đóng băng</b> ❄. Head \(g_s\) không dùng nữa. Đặc trưng của encoder trở thành <b>mẫu chuẩn</b> (edge prototype) cho các bước sau.</p>
+</section>
+
+<section id="buoc-2">
+  <h2><span class="num">2.</span>Cho dữ liệu qua encoder</h2>
+  <p>Mỗi mẫu dữ liệu gồm dữ liệu tại t₁ và t₂. Mỗi cảm biến có một encoder riêng.</p>
+  <div class="scrollx"><table class="ex">
+    <thead><tr><th>Cảm biến</th><th>Đầu vào</th><th>Encoder</th><th>Đầu ra</th></tr></thead>
+    <tbody>
+      <tr><td>Ảnh RGB</td><td class="mono">H×W×3</td><td>Image Encoder 🔥</td><td class="mono">F^I: H×W×C_2D</td></tr>
+      <tr><td>Event</td><td class="mono">B×H×W</td><td>Event Edge Encoder ❄</td><td class="mono">F^E_s: H_s×W_s×C_s</td></tr>
+      <tr><td>LiDAR</td><td class="mono">N×3</td><td>LiDAR Encoder 🔥</td><td class="mono">F^L: N×C_3D</td></tr>
+    </tbody>
+  </table></div>
+  <p>Ảnh có một ảnh tại t₁ và một ảnh tại t₂. LiDAR cũng có một đám mây điểm tại mỗi thời điểm. Event là dòng liên tục giữa t₁ và t₂. Dòng này được chia thành \(B\) ngăn thời gian. Ảnh và event cho ra <b>bản đồ</b>: mỗi pixel một vector. LiDAR cho ra <b>danh sách</b>: mỗi điểm một vector.</p>
+</section>
+
+<section id="buoc-3">
+  <h2><span class="num">3.</span>Điều chỉnh cho cùng kích thước</h2>
+  <p>Ba loại vector có độ dài khác nhau: \(C_{2D}\), \(C_s\), \(C_{3D}\). Một lớp chiếu nhẹ đưa tất cả về \(C_s\). Ảnh dùng tích chập 1×1. LiDAR dùng MLP. Event giữ nguyên.</p>
+  <div class="formula">$$Z^I_s=h^I_s(F^I_s),\qquad Z^L_s=h^L_s(F^L_s),\qquad Z^E_s\equiv F^E_s$$</div>
+  <p>Tích chập 1×1 nhân vector của từng pixel với một ma trận. MLP làm tương tự cho từng điểm. Chúng chỉ đổi độ dài vector. Chúng không nhìn sang vị trí bên cạnh.</p>
+</section>
+
+<section id="buoc-4">
+  <h2><span class="num">4.</span>Điều chỉnh cho cùng vị trí</h2>
+  <p>Ảnh và event nằm trên lưới pixel. LiDAR nằm trên điểm 3D. Có hai nhánh:</p>
+  <ul class="tight">
+    <li><b>Nhánh 2D: vị trí chung là pixel.</b> Chiếu điểm LiDAR lên ảnh. Chỉ vài pixel có điểm. Nội suy để mọi pixel có một vector LiDAR: \(Z^{L,2D}\in\mathbb{R}^{H\times W\times C}\).</li>
+    <li><b>Nhánh 3D: vị trí chung là điểm LiDAR.</b> Chiếu mỗi điểm lên ảnh để tìm pixel tương ứng. Đọc vector ảnh và vector event tại pixel đó: \(Z^{I,3D},Z^{E,3D}\in\mathbb{R}^{N\times C}\).</li>
+  </ul>
+  <p>Kết quả: tại mỗi pixel hoặc mỗi điểm có một <b>bộ ba vector</b> cùng kích thước và cùng vị trí.</p>
+</section>
+
+<section id="buoc-5">
+  <h2><span class="num">5.</span>Train cho giá trị gần nhau</h2>
+  <p>Cùng kích thước chưa có nghĩa là cùng ý nghĩa. Số thứ k của vector ảnh chưa chắc mô tả cùng một thứ như số thứ k của vector event. Loss căn chỉnh đo khoảng cách L1 giữa mọi cặp vector tại vị trí \(p\), rồi nhân với độ mạnh cạnh:</p>
+  <div class="formula">$$D_s(p)=\sum_{(m,n)\in\{I,E,L\}}\bigl\|Z^m_s(p)-Z^n_s(p)\bigr\|_1,\qquad \mathcal{L}^{2D/3D}_{\text{align}}=\sum_s\sum_p e^E_s(p)\,D_s(p)$$</div>
+  <div class="formula">$$\mathcal{L}_{\text{align}}=\lambda_{2D}\,\mathcal{L}^{2D}_{\text{align}}+\lambda_{3D}\,\mathcal{L}^{3D}_{\text{align}}$$</div>
+  <p>Ở mép vật đang chuyển động, \(e^E\approx 1\), nên sai khác bị phạt nặng. Ở vùng phẳng, \(e^E\approx 0\), nên sai khác gần như không bị phạt. Vì vậy, ảnh và LiDAR vẫn giữ thông tin riêng như màu sắc và độ sâu.</p>
+  <h3 class="sub">Chặn gradient tại event</h3>
+  <p>Gradient bị chặn tại \(Z^E\) trong suốt quá trình train. Vì vậy, loss chỉ sửa encoder ảnh và LiDAR. Event là mỏ neo đứng yên. Có ba lý do:</p>
+  <ol class="steps">
+    <li>Ảnh và LiDAR học theo event, không phải ngược lại.</li>
+    <li>Event encoder không quên kiến thức cạnh đã học ở bước 1.</li>
+    <li>Ba vector không thể cùng trôi về một lời giải vô nghĩa, ví dụ toàn số 0, chỉ để loss bằng 0.</li>
+  </ol>
+  <p style="font-size:15px;color:var(--muted)">Các tác giả <a class="cite" href="#ref1">[1]</a> nêu trực tiếp lý do 1 (“to fix edge prototypes”). Lý do 2 và 3 là giải thích thêm của người viết.</p>
+  <h3 class="sub">Train cùng lúc với nhiệm vụ chính</h3>
+  <p>Loss căn chỉnh không được train riêng. Nó là một phần của loss tổng:</p>
+  <div class="formula">$$\mathcal{L}_{\text{total}}=\mathcal{L}_{\text{task}}+\lambda_{\text{align}}\,\mathcal{L}_{\text{align}}+\lambda_{\text{contra}}\,\mathcal{L}_{\text{contra}}$$</div>
+  <p>\(\mathcal{L}_{\text{task}}\) là sai số dự đoán flow. \(\mathcal{L}_{\text{contra}}\) nối nhánh 2D với nhánh 3D. Khi chạy thật, \(\mathcal{L}_{\text{align}}\) không còn dùng. Thứ còn lại là các encoder đã học cách tạo vector cùng ngôn ngữ cạnh.</p>
+</section>
+
+<section id="sau-do">
+  <h2>Sau đó: trộn và ra flow từ t₁ đến t₂</h2>
+  <p>Ba vector đã cùng kích thước, cùng vị trí và cùng ý nghĩa. Vì vậy, việc trộn trở nên đơn giản. Mô hình cộng ba vector theo trọng số độ tin cậy của từng cảm biến. Sau đó, một khối cross-attention tinh chỉnh kết quả. Bộ giải mã đi từ thô đến mịn: đoán flow ở mức thô, dùng flow đó để warp đặc trưng t₂ về t₁, rồi sửa phần còn sai ở mức mịn hơn.</p>
+  <div class="scrollx"><table class="ex">
+    <thead><tr><th>Đầu ra</th><th>Kích thước</th><th>Ý nghĩa</th></tr></thead>
+    <tbody>
+      <tr><td>Optical flow</td><td class="mono">H×W×2</td><td>Pixel (x, y) ở t₁ sẽ nằm ở (x+u, y+v) ở t₂.</td></tr>
+      <tr><td>Scene flow</td><td class="mono">N×3</td><td>Điểm i ở t₁ di chuyển (dx, dy, dz) mét đến t₂.</td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-size:15px;color:var(--muted)">Bài chính <a class="cite" href="#ref1">[1]</a> chỉ nói bộ giải mã theo kiểu PWC, từ thô đến mịn, có warp. Chi tiết kiến trúc nằm trong tài liệu bổ sung.</p>
+</section>
+
+<section id="key-takeaways">
+  <h2>Key takeaways</h2>
+  <ul class="tight">
+    <li><b>Thống nhất trước, trộn sau.</b> Ba cảm biến được đưa về một ngôn ngữ chung trước khi trộn. Vì vậy, khối trộn đơn giản hơn nhiều.</li>
+    <li><b>Event là mỏ neo.</b> Event cùng lưới pixel với ảnh và thưa giống LiDAR. Event tự nhiên ghi lại cạnh chuyển động.</li>
+    <li><b>Năm bước:</b> pretrain event → encoder → cùng kích thước → cùng vị trí → cùng giá trị.</li>
+    <li><b>Bước 1 tự giám sát.</b> Encoder nhìn nửa đầu cửa sổ event và đoán độ mạnh cạnh của nửa sau.</li>
+    <li><b>Bước 5 có hai mẹo:</b> trọng số cạnh \(e^E\) và stop-gradient tại event.</li>
+  </ul>
+</section>
+
+<nav class="series-pn" aria-label="Bài trước và bài sau"><span></span><a href="x2_fusion_fusion_vi.html">2. Reliability-aware Adaptive Fusion →</a></nav>
+
+<section id="refs">
+  <h2>Tài liệu tham khảo</h2>
+  <ol class="refs">
+    <li id="ref1">R. Guo, C. Ruan, H. Wang, Z. Gong, J. Xu, X. Chen. <i>x2-Fusion: Cross-Modality and Cross-Dimension Flow Estimation in Event Edge Space</i>. Proc. IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2026, tr. 15145–15155. Công thức từ §3.1 và §3.4.</li>
+    <li id="ref2">M. Gehrig, W. Aarents, D. Gehrig, D. Scaramuzza. <i>DSEC: A Stereo Event Camera Dataset for Driving Scenarios</i>. IEEE Robotics and Automation Letters, 6(3):4947–4954, 2021. Giấy phép CC BY-SA 4.0. <a href="https://dsec.ifi.uzh.ch/">dsec.ifi.uzh.ch</a></li>
+  </ol>
+</section>
+</main>
+
+<script>
+(function(){
+  var b=document.getElementById('themebtn'), r=document.documentElement, t=null;
+  try{t=localStorage.getItem('hkh-theme')}catch(e){}
+  if(t) r.setAttribute('data-theme',t);
+  b.onclick=function(){var dark=r.getAttribute('data-theme')==='dark'||(!r.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
+    var n=dark?'light':'dark'; r.setAttribute('data-theme',n); try{localStorage.setItem('hkh-theme',n)}catch(e){}};
+})();
+</script>
+</body>
+</html>

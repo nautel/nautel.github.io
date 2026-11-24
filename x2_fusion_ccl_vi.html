@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cross-dimension Contrast Learning</title>
+<meta name="description" content="Giải thích dễ hiểu Cross-dimension Contrast Learning của x2-Fusion (CVPR 2026): pull giữa các khung, push trong một khung, và hàm mất mát tổng. Có sơ đồ và ví dụ bằng số.">
+<meta name="author" content="Lê Tuân">
+<link rel="canonical" href="https://nautel.github.io/x2_fusion_ccl_vi.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cross-dimension Contrast Learning">
+<meta property="og:description" content="Giải thích dễ hiểu Cross-dimension Contrast Learning của x2-Fusion (CVPR 2026): pull giữa các khung, push trong một khung, và hàm mất mát tổng.">
+<meta property="og:url" content="https://nautel.github.io/x2_fusion_ccl_vi.html">
+<meta property="og:locale" content="vi_VN">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Cross-dimension Contrast Learning","inLanguage":"vi","author":{"@type":"Person","name":"Lê Tuân","url":"https://nautel.github.io/"},"dateModified":"2026-11-24","url":"https://nautel.github.io/x2_fusion_ccl_vi.html"}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600&family=Source+Code+Pro:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false})"></script>
+<style>
+/* Mẫu 10 "Lớn & thoáng" của blog nautel.github.io */
+:root{--bg:#f7f7f5;--card:#fff;--fg:#1d1f23;--muted:#5d6470;--line:#d9dce1;--soft:#eef0f3;--accent:#2563eb;--warn:#b91c1c;--edge:#b9bec7;--t10:#1757c4;
+  --img:#2f6fd6;--img-bg:#e6efff;--lid:#1f9d6b;--lid-bg:#e3f5ec;--ev:#d9822b;--ev-bg:#fdf0e1;--fu:#7c4dd6;--fu-bg:#efe7fd}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121417;--card:#1b1e23;--fg:#e7e9ed;--muted:#9aa2ae;--line:#30353d;--soft:#23272e;--accent:#60a5fa;--warn:#f87171;--edge:#454c57;--t10:#79b0ff;color-scheme:dark;
+  --img:#6ea2ff;--img-bg:#1d2a44;--lid:#4fd19b;--lid-bg:#17332a;--ev:#f0a457;--ev-bg:#3a2a18;--fu:#b88cff;--fu-bg:#2c2242}}
+:root[data-theme="dark"]{--bg:#121417;--card:#1b1e23;--fg:#e7e9ed;--muted:#9aa2ae;--line:#30353d;--soft:#23272e;--accent:#60a5fa;--warn:#f87171;--edge:#454c57;--t10:#79b0ff;color-scheme:dark;
+  --img:#6ea2ff;--img-bg:#1d2a44;--lid:#4fd19b;--lid-bg:#17332a;--ev:#f0a457;--ev-bg:#3a2a18;--fu:#b88cff;--fu-bg:#2c2242}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);--mono:"Source Code Pro",ui-monospace,monospace}
+body.t10{--accent:var(--t10);--col:740px;font:300 19px/1.6 "Lexend",sans-serif}
+body.t10 b,body.t10 strong,body.t10 th{font-weight:600}
+a{color:var(--accent)}
+header.top,main,nav.toc{max-width:var(--col,740px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{padding-top:32px;padding-bottom:12px}
+main{padding-bottom:64px}
+h1,h2{text-wrap:balance}
+header.top h1{font:600 42px/1.15 "Lexend",sans-serif;letter-spacing:-.02em;margin:0 0 6px}
+@media(max-width:600px){header.top h1{font-size:30px}}
+h2{font:600 27px/1.3 "Lexend",sans-serif;margin:0 0 10px}
+h2 .num{margin-right:.35em}
+section{margin:72px 0 0}
+.themebtn{float:right;font-size:13px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;min-height:28px}
+.sitebar{margin:0 0 26px}
+.sitebar .brand{display:inline-block;font-size:30px;font-weight:700;line-height:1.2;color:var(--fg);text-decoration:none;margin:0 0 10px}
+.sitebar nav{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:17px}.sitebar nav a{text-decoration:none}
+.byline{color:var(--muted);font-size:.9em;margin:2px 0 10px}
+nav.toc{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:15px}
+nav.toc a{text-decoration:none}
+p{margin:0 0 14px}
+code{font-family:var(--mono);font-size:.85em;background:var(--soft);padding:1px 5px;border-radius:4px;white-space:nowrap}
+.notebox{border-left:4px solid var(--accent);background:var(--soft);padding:10px 14px;border-radius:6px;margin:12px 0}
+.notebox ul{margin:6px 0 0;padding-left:20px}
+.formula{overflow-x:auto;overflow-y:hidden}
+figure{margin:16px 0}figcaption{font-size:14px;color:var(--muted);text-align:center;margin-top:6px}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scrollx svg{min-width:540px}
+.wide{width:min(1000px,calc(100vw - 48px));position:relative;left:50%;transform:translateX(-50%)}
+@media(max-width:1040px){.wide{width:100%;left:0;transform:none}}
+.red{color:var(--warn);font-weight:600}
+.small{font-size:15px;color:var(--muted)}
+ul.tight{margin:8px 0;padding-left:22px}ul.tight li{margin:6px 0}
+h3.sub{font:600 19px/1.3 "Lexend",sans-serif;margin:24px 0 6px}
+ol.steps{margin:6px 0 16px;padding-left:24px}ol.steps li{margin:6px 0}
+table.ex{border-collapse:collapse;width:100%;font-size:15px;margin:4px 0 8px}
+table.ex th,table.ex td{border-bottom:1px solid var(--line);padding:7px 10px 7px 0;text-align:left;vertical-align:top}
+table.ex th{color:var(--muted);font-weight:600;font-size:14px}
+table.ex td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+table.ex td.hi{color:var(--warn);font-weight:600}
+table.ex td.mono{font-family:var(--mono);font-size:14px;white-space:nowrap}
+a.cite{text-decoration:none}a.cite:hover{text-decoration:underline}
+.refs li:target{background:color-mix(in srgb,var(--accent) 15%,transparent);border-radius:4px}
+.refs{font-size:14px;padding-left:22px;margin:8px 0}.refs li{margin:5px 0;word-break:break-word}
+/* hình */
+figure svg{width:100%;height:auto;display:block}
+figure svg text{font-family:"Lexend",sans-serif;font-weight:400;fill:var(--fg);font-size:13px}
+svg .bx{fill:var(--card);stroke:var(--edge);stroke-width:1.3}
+svg .bs{fill:var(--soft);stroke:var(--edge);stroke-width:1.1}
+svg .ln{stroke:var(--fg);stroke-width:1.4;fill:none}
+svg .mu{fill:var(--muted)}svg .rd{fill:var(--warn);font-weight:600}
+svg .sm{font-size:12px} svg .xs{font-size:10.5px} svg .md{font-size:14px} svg .b{font-weight:600} svg .mono{font-family:"Source Code Pro",monospace}
+svg .bimg{fill:var(--img-bg);stroke:var(--img);stroke-width:1.5}
+svg .blid{fill:var(--lid-bg);stroke:var(--lid);stroke-width:1.5}
+svg .bev{fill:var(--ev-bg);stroke:var(--ev);stroke-width:1.5}
+svg .bfu{fill:var(--fu-bg);stroke:var(--fu);stroke-width:1.7}
+svg .lnev{stroke:var(--ev);stroke-width:2;fill:none}
+svg .lnfu{stroke:var(--fu);stroke-width:1.8;fill:none;stroke-dasharray:5 4}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media print{.themebtn,.sitebar,nav.toc{display:none!important}.wide{width:100%!important;left:0!important;transform:none!important}figure{break-inside:avoid}}
+.series{font-size:15px;color:var(--muted);margin:0 0 8px;line-height:1.7}.series a{text-decoration:none}.series [aria-current]{color:var(--fg);font-weight:600}.series-pn{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px 20px;font-size:16px;border-top:1px solid var(--line);margin-top:56px;padding-top:16px}.series-pn a{text-decoration:none}
+</style>
+</head>
+<body class="t10">
+<header class="top">
+  <button class="themebtn" id="themebtn" type="button">Sáng / Tối</button>
+  <div class="sitebar"><a class="brand" href="/">Lê Tuân</a><nav aria-label="Điều hướng trang"><a href="/">Trang chủ</a><a href="/#blog">Blog</a></nav></div>
+  <h1>Cross-dimension Contrast Learning</h1>
+  <p class="byline">Lê Tuân · Cập nhật 24/11/2026 · Đọc 6 phút</p>
+  <nav class="series" aria-label="Loạt bài x2-Fusion"><span>Loạt bài x2-Fusion (CVPR 2026):</span> <a href="x2_fusion_vi.html">1. Event Edge Space</a> · <a href="x2_fusion_fusion_vi.html">2. Reliability-aware Adaptive Fusion</a> · <span aria-current="page">3. Cross-dimension Contrast Learning</span></nav>
+</header>
+<nav class="toc" aria-label="Mục lục"><a href="#intro">Mở đầu</a><a href="#pull">1. Pull</a><a href="#push">2. Push</a><a href="#contra">3. Loss tương phản</a><a href="#tong">4. Hàm mất mát tổng</a><a href="#thu-tu">5. Thứ tự huấn luyện</a><a href="#chua-ro">6. Điểm chưa rõ</a><a href="#key-takeaways">Key takeaways</a><a href="#refs">Tài liệu tham khảo</a></nav>
+<main id="main">
+
+<section id="intro">
+  <h2>Mở đầu</h2>
+  <p>Hai bài trước giải thích <a href="x2_fusion_vi.html">Event Edge Space</a> và <a href="x2_fusion_fusion_vi.html">Reliability-aware Adaptive Fusion</a> của x2-Fusion <a class="cite" href="#ref1">[1]</a>. Sau bước trộn, mô hình có hai nhánh. Nhánh 2D cho đặc trưng \(F^{2D}_{\text{out}}\) để dự đoán optical flow. Nhánh 3D cho đặc trưng \(F^{3D}_{\text{out}}\) để dự đoán scene flow. Mỗi nhánh có đặc trưng tại hai thời điểm t₁ và t₂.</p>
+  <p>Hai nhánh mô tả <b>cùng một chuyển động</b> của cảnh. Vì vậy, chúng có thể giúp nhau. <b>Cross-dimension Contrast Learning (CCL)</b> là một loss phụ nối hai nhánh. CCL có hai phần ngược chiều nhau:</p>
+  <ul class="tight">
+    <li><b>Pull (kéo lại gần), giữa hai khung:</b> chuyển động mà nhánh 2D thấy phải <b>cùng hướng</b> với chuyển động mà nhánh 3D thấy.</li>
+    <li><b>Push (đẩy ra xa), trong một khung:</b> đặc trưng 2D và 3D phải <b>bổ sung</b> cho nhau, không lặp lại cùng một thông tin.</li>
+  </ul>
+
+  <figure class="wide scrollx">
+  <svg viewBox="0 0 1000 430" role="img" aria-label="Sơ đồ Cross-dimension Contrast Learning: pull giữa hai khung, push trong mỗi khung" style="min-width:760px">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--fg)"/></marker>
+      <marker id="ahf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--fu)"/></marker>
+      <marker id="ahw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--warn)"/></marker>
+    </defs>
+
+    <!-- headers -->
+    <g class="xs mu b" text-anchor="middle">
+      <text x="65" y="22">NHÁNH</text>
+      <text x="230" y="22">KHUNG t₁</text>
+      <text x="470" y="22">KHUNG t₂</text>
+      <text x="660" y="22">HIỆU THEO THỜI GIAN</text>
+      <text x="840" y="22">CHUYỂN ĐỘNG</text>
+    </g>
+
+    <!-- row labels -->
+    <rect x="15" y="80" width="100" height="50" rx="8" class="bimg"/><text x="65" y="102" text-anchor="middle" class="sm b">Nhánh 2D</text><text x="65" y="119" text-anchor="middle" class="xs">optical flow</text>
+    <rect x="15" y="290" width="100" height="50" rx="8" class="blid"/><text x="65" y="312" text-anchor="middle" class="sm b">Nhánh 3D</text><text x="65" y="329" text-anchor="middle" class="xs">scene flow</text>
+
+    <!-- 2D row boxes: y 80..130 -->
+    <rect x="160" y="80" width="140" height="50" rx="8" class="bimg"/><text x="230" y="110" text-anchor="middle" class="sm mono">F^2D(t₁)</text>
+    <rect x="400" y="80" width="140" height="50" rx="8" class="bimg"/><text x="470" y="110" text-anchor="middle" class="sm mono">F^2D(t₂)</text>
+    <!-- 3D row boxes: y 290..340 -->
+    <rect x="160" y="290" width="140" height="50" rx="8" class="blid"/><text x="230" y="312" text-anchor="middle" class="sm mono">F^3D_proj(t₁)</text><text x="230" y="329" text-anchor="middle" class="xs mu">3D chiếu về 2D</text>
+    <rect x="400" y="290" width="140" height="50" rx="8" class="blid"/><text x="470" y="312" text-anchor="middle" class="sm mono">F^3D_proj(t₂)</text><text x="470" y="329" text-anchor="middle" class="xs mu">3D chiếu về 2D</text>
+
+    <!-- delta boxes -->
+    <rect x="600" y="80" width="120" height="50" rx="8" class="bx"/><text x="660" y="101" text-anchor="middle" class="sm">ΔF = t₂ − t₁</text><text x="660" y="119" text-anchor="middle" class="xs">→ GAP</text>
+    <rect x="600" y="290" width="120" height="50" rx="8" class="bx"/><text x="660" y="311" text-anchor="middle" class="sm">ΔF = t₂ − t₁</text><text x="660" y="329" text-anchor="middle" class="xs">→ GAP</text>
+    <!-- arrows into delta: t2 direct, t1 routed above / below -->
+    <g class="ln">
+      <path d="M540 105H598" marker-end="url(#ah)"/>
+      <path d="M230 80V50H645V78" marker-end="url(#ah)"/>
+      <path d="M540 315H598" marker-end="url(#ah)"/>
+      <path d="M230 340V372H645V342" marker-end="url(#ah)"/>
+    </g>
+
+    <!-- motion vectors -->
+    <rect x="780" y="80" width="120" height="50" rx="8" class="bfu"/><text x="840" y="110" text-anchor="middle" class="md b">M^2D</text>
+    <rect x="780" y="290" width="120" height="50" rx="8" class="bfu"/><text x="840" y="320" text-anchor="middle" class="md b">M^3D_proj</text>
+    <path class="ln" d="M720 105H778" marker-end="url(#ah)"/>
+    <path class="ln" d="M720 315H778" marker-end="url(#ah)"/>
+
+    <!-- PULL between M -->
+    <path d="M840 134V286" style="stroke:var(--fu);stroke-width:2.4;fill:none" marker-start="url(#ahf)" marker-end="url(#ahf)"/>
+    <text x="852" y="196" class="md b" style="fill:var(--fu)">PULL</text>
+    <text x="852" y="214" class="xs" style="fill:var(--fu)">cosine:</text>
+    <text x="852" y="229" class="xs" style="fill:var(--fu)">cùng hướng</text>
+
+    <!-- PUSH within each frame -->
+    <rect x="165" y="180" width="130" height="62" rx="8" class="bx" style="stroke:var(--warn)"/>
+    <text x="230" y="200" text-anchor="middle" class="sm rd">PUSH</text>
+    <text x="230" y="217" text-anchor="middle" class="xs">z^2D ~ q_φ, z^3D ~ q_ψ</text>
+    <text x="230" y="232" text-anchor="middle" class="xs">BCE(σ(z^2D), σ(z^3D))</text>
+    <rect x="405" y="180" width="130" height="62" rx="8" class="bx" style="stroke:var(--warn)"/>
+    <text x="470" y="200" text-anchor="middle" class="sm rd">PUSH</text>
+    <text x="470" y="217" text-anchor="middle" class="xs">z^2D ~ q_φ, z^3D ~ q_ψ</text>
+    <text x="470" y="232" text-anchor="middle" class="xs">BCE(σ(z^2D), σ(z^3D))</text>
+    <g style="stroke:var(--warn);stroke-width:1.8;fill:none">
+      <path d="M230 132V178" marker-start="url(#ahw)"/>
+      <path d="M230 244V288" marker-end="url(#ahw)"/>
+      <path d="M470 132V178" marker-start="url(#ahw)"/>
+      <path d="M470 244V288" marker-end="url(#ahw)"/>
+    </g>
+
+    <!-- footer -->
+    <rect x="160" y="392" width="740" height="32" rx="8" class="bs"/>
+    <text x="530" y="413" text-anchor="middle" class="sm"><tspan class="b">L_contra = L_pull + γ · L_push</tspan><tspan class="mu" dx="14">· pull: giữa hai khung · push: trong cùng một khung</tspan></text>
+  </svg>
+  <figcaption>Hình 1. Cross-dimension Contrast Learning, vẽ theo §3.3 của <a class="cite" href="#ref1">[1]</a>. Đường ngang: lấy hiệu đặc trưng giữa t₁ và t₂, rồi trung bình toàn cục (GAP) để có vector chuyển động. Mũi tên tím: PULL kéo hai vector chuyển động cùng hướng. Mũi tên đỏ: PUSH tách đặc trưng 2D và 3D trong cùng một khung.</figcaption>
+  </figure>
+</section>
+
+<section id="pull">
+  <h2><span class="num">1.</span>Pull: chuyển động 2D và 3D phải cùng hướng</h2>
+  <p>Pull hoạt động <b>giữa hai khung</b>. Nó dùng sự thay đổi của đặc trưng từ t₁ đến t₂.</p>
+  <ol class="steps">
+    <li><b>Đưa về cùng không gian.</b> Đặc trưng 3D nằm trên các điểm, không nằm trên lưới pixel. Vì vậy, mô hình chiếu chúng về không gian 2D để được \(F^{3D}_{\text{proj}}\).</li>
+    <li><b>Lấy hiệu theo thời gian.</b> \(\Delta F_{\text{out}}=F_{\text{out}}(t_2)-F_{\text{out}}(t_1)\). Hiệu này chứa thông tin chuyển động.</li>
+    <li><b>Trung bình toàn cục (GAP).</b> Lấy trung bình trên mọi vị trí. Kết quả là <b>một vector</b> cho cả cảnh: \(M^{2D}\) và \(M^{3D}_{\text{proj}}\).</li>
+    <li><b>So hướng bằng cosine.</b> Hai vector cùng hướng thì loss nhỏ.</li>
+  </ol>
+  <div class="formula">$$M^{2D/3D}=\mathcal{P}\big(\Delta F^{2D/3D}_{\text{out}}\big)$$</div>
+  <div class="formula">$$\mathcal{L}_{\text{pull}}=1-\frac{\big\langle\phi(M^{2D}),\,\psi(M^{3D}_{\text{proj}})\big\rangle}{\big\|\phi(M^{2D})\big\|_2\,\big\|\psi(M^{3D}_{\text{proj}})\big\|_2}$$</div>
+  <p>\(\mathcal{P}\) là global average pooling. \(\phi\) và \(\psi\) là hai hàm chuẩn hóa, một cho mỗi nhánh. Phân số là <b>cosine</b> của góc giữa hai vector. Vì vậy, \(\mathcal{L}_{\text{pull}}\) nằm trong khoảng 0 đến 2.</p>
+  <p>Ví dụ với \(\phi(M^{2D})=[0.8,\,0.6]\):</p>
+  <ul class="tight">
+    <li>\(\psi(M^{3D}_{\text{proj}})=[0.8,\,0.6]\): cùng hướng. Cosine = 1, \(\mathcal{L}_{\text{pull}}=0\). Không bị phạt.</li>
+    <li>\(\psi(M^{3D}_{\text{proj}})=[0.6,\,0.8]\): gần cùng hướng. Cosine = 0.96, \(\mathcal{L}_{\text{pull}}=0.04\). Phạt rất nhẹ.</li>
+    <li>\(\psi(M^{3D}_{\text{proj}})=[-0.6,\,0.8]\): vuông góc. Cosine = 0, \(\mathcal{L}_{\text{pull}}=1\).</li>
+    <li>\(\psi(M^{3D}_{\text{proj}})=[-0.8,\,-0.6]\): ngược hướng. Cosine = −1, \(\mathcal{L}_{\text{pull}}=2\). Phạt nặng nhất.</li>
+  </ul>
+  <p class="small">Vector 2 chiều chỉ để minh họa. Vector thật có \(C\) chiều.</p>
+  <p>Cosine chỉ so <b>hướng</b>, không so độ lớn. Đây là lựa chọn hợp lý. Đặc trưng 2D và 3D có thang đo khác nhau, nhưng hướng thay đổi của chúng phải khớp nhau.</p>
+</section>
+
+<section id="push">
+  <h2><span class="num">2.</span>Push: đặc trưng 2D và 3D phải bổ sung cho nhau</h2>
+  <p>Push hoạt động <b>trong cùng một khung</b>. Mục tiêu: mỗi nhánh giữ thông tin riêng có ích cho nhiệm vụ của nó. Nhánh 2D cần chi tiết trên ảnh. Nhánh 3D cần hình học theo độ sâu. Nếu hai nhánh chứa cùng một thông tin, mô hình lãng phí sức chứa.</p>
+  <p>Các tác giả dùng <b>thông tin tương hỗ</b> (mutual information) để đo mức trùng lặp. Họ muốn giảm đại lượng này. Mỗi nhánh được mã hóa thành một phân phối Gauss, theo kiểu variational:</p>
+  <div class="formula">$$q_\phi(z^{2D}\mid F^{2D})=\mathcal{N}(\mu^{2D},\sigma^{2D}),\qquad q_\psi(z^{3D}\mid F^{3D}_{\text{proj}})=\mathcal{N}(\mu^{3D},\sigma^{3D})$$</div>
+  <p>Mô hình lấy mẫu \(z^{2D}\) và \(z^{3D}\) từ hai phân phối này. Sau đó, thông tin tương hỗ được xấp xỉ bằng binary cross-entropy (BCE) đối xứng, tính cho cả hai khung:</p>
+  <div class="formula">$$\mathcal{L}_{\text{push}}=\frac12\sum_{t\in\{t_1,t_2\}}\text{BCE}\big(\sigma(z^{2D}_t),\,\sigma(z^{3D}_t)\big)$$</div>
+  <ul class="tight">
+    <li>\(\sigma\) là hàm sigmoid. Nó đưa mỗi số về khoảng 0 đến 1, nên có thể dùng BCE.</li>
+    <li>Tổng trên \(t_1\) và \(t_2\), rồi chia 2: lấy trung bình trên hai khung.</li>
+  </ul>
+  <div class="notebox">Pull và push không mâu thuẫn. Pull chỉ ép <b>sự thay đổi theo thời gian</b> (sau khi trung bình toàn cục) cùng hướng. Push ép <b>nội dung trong một khung</b> không trùng lặp. Hai nhánh đồng ý về chuyển động, nhưng mỗi nhánh giữ chi tiết riêng.</div>
+</section>
+
+<section id="contra">
+  <h2><span class="num">3.</span>Loss tương phản</h2>
+  <div class="formula">$$\mathcal{L}_{\text{contra}}=\mathcal{L}_{\text{pull}}+\gamma\cdot\mathcal{L}_{\text{push}}$$</div>
+  <p>\(\gamma\) cân bằng giữa pull và push. Bài chính không ghi giá trị của \(\gamma\). CCL chỉ dùng khi huấn luyện. Khi chạy thật, mô hình không tính pull hay push.</p>
+</section>
+
+<section id="tong">
+  <h2><span class="num">4.</span>Hàm mất mát tổng</h2>
+  <p>Mô hình được huấn luyện với tổng có trọng số của ba loss:</p>
+  <div class="formula">$$\mathcal{L}_{\text{total}}=\mathcal{L}_{\text{task}}+\lambda_{\text{align}}\,\mathcal{L}_{\text{align}}+\lambda_{\text{contra}}\,\mathcal{L}_{\text{contra}}$$</div>
+  <h3 class="sub">Loss nhiệm vụ \(\mathcal{L}_{\text{task}}\)</h3>
+  <div class="formula">$$\mathcal{L}_{\text{task}}=\sum_{2D,\,3D}\lambda_{2D/3D}\sum_{l}\omega^{2D/3D}_l\,\big\|\mathbf f^{2D/3D}_{\text{pred},l}-\mathbf f^{2D/3D}_{\text{gt},l}\big\|_2$$</div>
+  <ol class="steps">
+    <li>Mô hình dự đoán flow ở nhiều mức \(l\), từ thô đến mịn, theo kiểu PWC.</li>
+    <li>Flow ở mức \(l\) được phóng to và dùng để warp. Kết quả khởi tạo cho mức \(l-1\), mịn hơn.</li>
+    <li>Ở mỗi mức, đo khoảng cách L2 giữa flow dự đoán \(\mathbf f_{\text{pred}}\) và flow thật \(\mathbf f_{\text{gt}}\).</li>
+    <li>\(\omega_l\) là trọng số của mức \(l\). \(\lambda_{2D}\), \(\lambda_{3D}\) cân bằng giữa optical flow và scene flow.</li>
+  </ol>
+  <p>Vai trò của ba loss:</p>
+  <ul class="tight">
+    <li><b>\(\mathcal{L}_{\text{task}}\)</b>: dự đoán đúng optical flow và scene flow.</li>
+    <li><b>\(\mathcal{L}_{\text{align}}\)</b>: kéo đặc trưng ảnh và LiDAR về mỏ neo event cố định. Xem bài <a href="x2_fusion_vi.html#buoc-5">Event Edge Space</a>.</li>
+    <li><b>\(\mathcal{L}_{\text{contra}}\)</b>: pull làm hai nhánh đồng ý về chuyển động. Push làm hai nhánh bổ sung cho nhau.</li>
+  </ul>
+</section>
+
+<section id="thu-tu">
+  <h2><span class="num">5.</span>Thứ tự huấn luyện</h2>
+  <ol class="steps">
+    <li><b>Giai đoạn 1.</b> Huấn luyện riêng Event Edge Encoder bằng \(\mathcal{L}^E_{\text{edge}}\): nhìn nửa đầu cửa sổ event, đoán độ mạnh cạnh của nửa sau. Sau đó đóng băng encoder.</li>
+    <li><b>Giai đoạn 2.</b> Huấn luyện mọi phần còn lại bằng \(\mathcal{L}_{\text{total}}\). Event encoder không thay đổi.</li>
+    <li><b>Khi chạy thật.</b> Không tính loss nào. Mô hình chỉ cho ra optical flow và scene flow.</li>
+  </ol>
+</section>
+
+<section id="chua-ro">
+  <h2><span class="num">6.</span>Điểm chưa rõ trong bài gốc</h2>
+  <div class="notebox">
+    <ul>
+      <li><b>BCE và “push”.</b> Theo nghĩa đen, giảm \(\text{BCE}(\sigma(z^{2D}),\sigma(z^{3D}))\) làm \(\sigma(z^{2D})\) tiến gần \(\sigma(z^{3D})\). Như vậy là kéo lại gần, không phải đẩy ra xa. Bài chính không giải thích cách BCE xấp xỉ việc <b>giảm</b> thông tin tương hỗ. Có thể có một bộ phân biệt (discriminator) hoặc một dấu khác trong tài liệu bổ sung.</li>
+      <li><b>\(\phi\) và \(\psi\) trong pull.</b> Bài gọi chúng là “hàm chuẩn hóa”. Bài không nói đây là chuẩn hóa cố định hay một lớp học được. Ở push, \(\phi\) và \(\psi\) lại là tham số của hai encoder variational. Cùng ký hiệu được dùng cho hai việc khác nhau.</li>
+      <li><b>Chiếu 3D về 2D.</b> Bài không nói chi tiết cách chiếu \(F^{3D}\) thành \(F^{3D}_{\text{proj}}\), ví dụ: chiếu điểm lên ảnh rồi rải đặc trưng (scatter), hay nội suy.</li>
+      <li><b>Siêu tham số.</b> Bài chính không ghi giá trị của \(\gamma\), \(\lambda_{\text{align}}\), \(\lambda_{\text{contra}}\), \(\lambda_{2D/3D}\), \(\omega_l\).</li>
+    </ul>
+  </div>
+</section>
+
+<section id="key-takeaways">
+  <h2>Key takeaways</h2>
+  <ul class="tight">
+    <li><b>Hai nhánh, một chuyển động.</b> Nhánh 2D và nhánh 3D mô tả cùng một cảnh đang chuyển động. CCL dùng điều này để hai nhánh giúp nhau.</li>
+    <li><b>Pull, giữa hai khung:</b> hiệu đặc trưng t₂ − t₁, trung bình toàn cục, rồi so hướng bằng cosine. Chuyển động 2D và 3D phải cùng hướng.</li>
+    <li><b>Push, trong một khung:</b> giảm thông tin tương hỗ giữa đặc trưng 2D và 3D, qua encoder variational và BCE. Mỗi nhánh giữ thông tin riêng.</li>
+    <li><b>Loss tổng:</b> \(\mathcal{L}_{\text{task}}+\lambda_{\text{align}}\mathcal{L}_{\text{align}}+\lambda_{\text{contra}}\mathcal{L}_{\text{contra}}\). Event encoder được pretrain trước và đóng băng.</li>
+  </ul>
+</section>
+
+<nav class="series-pn" aria-label="Bài trước và bài sau"><a href="x2_fusion_fusion_vi.html">← 2. Reliability-aware Adaptive Fusion</a><span></span></nav>
+
+<section id="refs">
+  <h2>Tài liệu tham khảo</h2>
+  <ol class="refs">
+    <li id="ref1">R. Guo, C. Ruan, H. Wang, Z. Gong, J. Xu, X. Chen. <i>x2-Fusion: Cross-Modality and Cross-Dimension Flow Estimation in Event Edge Space</i>. Proc. IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2026, tr. 15145–15155. Công thức (14)–(20) từ §3.3–§3.4.</li>
+  </ol>
+</section>
+</main>
+
+<script>
+(function(){
+  var b=document.getElementById('themebtn'), r=document.documentElement, t=null;
+  try{t=localStorage.getItem('hkh-theme')}catch(e){}
+  if(t) r.setAttribute('data-theme',t);
+  b.onclick=function(){var dark=r.getAttribute('data-theme')==='dark'||(!r.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
+    var n=dark?'light':'dark'; r.setAttribute('data-theme',n); try{localStorage.setItem('hkh-theme',n)}catch(e){}};
+})();
+</script>
+</body>
+</html>

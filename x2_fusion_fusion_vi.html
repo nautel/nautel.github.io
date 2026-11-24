@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reliability-aware Adaptive Fusion</title>
+<meta name="description" content="Giải thích dễ hiểu module Reliability-aware Adaptive Fusion của x2-Fusion (CVPR 2026): độ tin cậy toàn cục, độ tin cậy cục bộ, tổng có trọng số và cross-attention. Có sơ đồ và ví dụ bằng số.">
+<meta name="author" content="Lê Tuân">
+<link rel="canonical" href="https://nautel.github.io/x2_fusion_fusion_vi.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Reliability-aware Adaptive Fusion">
+<meta property="og:description" content="Giải thích dễ hiểu module Reliability-aware Adaptive Fusion của x2-Fusion (CVPR 2026): độ tin cậy toàn cục, độ tin cậy cục bộ, tổng có trọng số và cross-attention.">
+<meta property="og:url" content="https://nautel.github.io/x2_fusion_fusion_vi.html">
+<meta property="og:locale" content="vi_VN">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Reliability-aware Adaptive Fusion","inLanguage":"vi","author":{"@type":"Person","name":"Lê Tuân","url":"https://nautel.github.io/"},"dateModified":"2026-11-24","url":"https://nautel.github.io/x2_fusion_fusion_vi.html"}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600&family=Source+Code+Pro:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false})"></script>
+<style>
+/* Mẫu 10 "Lớn & thoáng" của blog nautel.github.io */
+:root{--bg:#f7f7f5;--card:#fff;--fg:#1d1f23;--muted:#5d6470;--line:#d9dce1;--soft:#eef0f3;--accent:#2563eb;--warn:#b91c1c;--edge:#b9bec7;--t10:#1757c4;
+  --img:#2f6fd6;--img-bg:#e6efff;--lid:#1f9d6b;--lid-bg:#e3f5ec;--ev:#d9822b;--ev-bg:#fdf0e1;--fu:#7c4dd6;--fu-bg:#efe7fd}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121417;--card:#1b1e23;--fg:#e7e9ed;--muted:#9aa2ae;--line:#30353d;--soft:#23272e;--accent:#60a5fa;--warn:#f87171;--edge:#454c57;--t10:#79b0ff;color-scheme:dark;
+  --img:#6ea2ff;--img-bg:#1d2a44;--lid:#4fd19b;--lid-bg:#17332a;--ev:#f0a457;--ev-bg:#3a2a18;--fu:#b88cff;--fu-bg:#2c2242}}
+:root[data-theme="dark"]{--bg:#121417;--card:#1b1e23;--fg:#e7e9ed;--muted:#9aa2ae;--line:#30353d;--soft:#23272e;--accent:#60a5fa;--warn:#f87171;--edge:#454c57;--t10:#79b0ff;color-scheme:dark;
+  --img:#6ea2ff;--img-bg:#1d2a44;--lid:#4fd19b;--lid-bg:#17332a;--ev:#f0a457;--ev-bg:#3a2a18;--fu:#b88cff;--fu-bg:#2c2242}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);--mono:"Source Code Pro",ui-monospace,monospace}
+body.t10{--accent:var(--t10);--col:740px;font:300 19px/1.6 "Lexend",sans-serif}
+body.t10 b,body.t10 strong,body.t10 th{font-weight:600}
+a{color:var(--accent)}
+header.top,main,nav.toc{max-width:var(--col,740px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{padding-top:32px;padding-bottom:12px}
+main{padding-bottom:64px}
+h1,h2{text-wrap:balance}
+header.top h1{font:600 42px/1.15 "Lexend",sans-serif;letter-spacing:-.02em;margin:0 0 6px}
+@media(max-width:600px){header.top h1{font-size:30px}}
+h2{font:600 27px/1.3 "Lexend",sans-serif;margin:0 0 10px}
+h2 .num{margin-right:.35em}
+section{margin:72px 0 0}
+.themebtn{float:right;font-size:13px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;min-height:28px}
+.sitebar{margin:0 0 26px}
+.sitebar .brand{display:inline-block;font-size:30px;font-weight:700;line-height:1.2;color:var(--fg);text-decoration:none;margin:0 0 10px}
+.sitebar nav{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:17px}.sitebar nav a{text-decoration:none}
+.byline{color:var(--muted);font-size:.9em;margin:2px 0 10px}
+nav.toc{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:15px}
+nav.toc a{text-decoration:none}
+p{margin:0 0 14px}
+code{font-family:var(--mono);font-size:.85em;background:var(--soft);padding:1px 5px;border-radius:4px;white-space:nowrap}
+.notebox{border-left:4px solid var(--accent);background:var(--soft);padding:10px 14px;border-radius:6px;margin:12px 0}
+.notebox ul{margin:6px 0 0;padding-left:20px}
+.formula{overflow-x:auto;overflow-y:hidden}
+figure{margin:16px 0}figcaption{font-size:14px;color:var(--muted);text-align:center;margin-top:6px}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scrollx svg{min-width:540px}
+.wide{width:min(1000px,calc(100vw - 48px));position:relative;left:50%;transform:translateX(-50%)}
+@media(max-width:1040px){.wide{width:100%;left:0;transform:none}}
+.red{color:var(--warn);font-weight:600}
+.small{font-size:15px;color:var(--muted)}
+ul.tight{margin:8px 0;padding-left:22px}ul.tight li{margin:6px 0}
+h3.sub{font:600 19px/1.3 "Lexend",sans-serif;margin:24px 0 6px}
+ol.steps{margin:6px 0 16px;padding-left:24px}ol.steps li{margin:6px 0}
+table.ex{border-collapse:collapse;width:100%;font-size:15px;margin:4px 0 8px}
+table.ex th,table.ex td{border-bottom:1px solid var(--line);padding:7px 10px 7px 0;text-align:left;vertical-align:top}
+table.ex th{color:var(--muted);font-weight:600;font-size:14px}
+table.ex td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+table.ex td.hi{color:var(--warn);font-weight:600}
+table.ex td.mono{font-family:var(--mono);font-size:14px;white-space:nowrap}
+a.cite{text-decoration:none}a.cite:hover{text-decoration:underline}
+.refs li:target{background:color-mix(in srgb,var(--accent) 15%,transparent);border-radius:4px}
+.refs{font-size:14px;padding-left:22px;margin:8px 0}.refs li{margin:5px 0;word-break:break-word}
+/* hình */
+figure svg{width:100%;height:auto;display:block}
+figure svg text{font-family:"Lexend",sans-serif;font-weight:400;fill:var(--fg);font-size:13px}
+svg .bx{fill:var(--card);stroke:var(--edge);stroke-width:1.3}
+svg .bs{fill:var(--soft);stroke:var(--edge);stroke-width:1.1}
+svg .ln{stroke:var(--fg);stroke-width:1.4;fill:none}
+svg .mu{fill:var(--muted)}svg .rd{fill:var(--warn);font-weight:600}
+svg .sm{font-size:12px} svg .xs{font-size:10.5px} svg .md{font-size:14px} svg .b{font-weight:600} svg .mono{font-family:"Source Code Pro",monospace}
+svg .bimg{fill:var(--img-bg);stroke:var(--img);stroke-width:1.5}
+svg .blid{fill:var(--lid-bg);stroke:var(--lid);stroke-width:1.5}
+svg .bev{fill:var(--ev-bg);stroke:var(--ev);stroke-width:1.5}
+svg .bfu{fill:var(--fu-bg);stroke:var(--fu);stroke-width:1.7}
+svg .lnev{stroke:var(--ev);stroke-width:2;fill:none}
+svg .lnfu{stroke:var(--fu);stroke-width:1.8;fill:none;stroke-dasharray:5 4}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media print{.themebtn,.sitebar,nav.toc{display:none!important}.wide{width:100%!important;left:0!important;transform:none!important}figure{break-inside:avoid}}
+.series{font-size:15px;color:var(--muted);margin:0 0 8px;line-height:1.7}.series a{text-decoration:none}.series [aria-current]{color:var(--fg);font-weight:600}.series-pn{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px 20px;font-size:16px;border-top:1px solid var(--line);margin-top:56px;padding-top:16px}.series-pn a{text-decoration:none}
+</style>
+</head>
+<body class="t10">
+<header class="top">
+  <button class="themebtn" id="themebtn" type="button">Sáng / Tối</button>
+  <div class="sitebar"><a class="brand" href="/">Lê Tuân</a><nav aria-label="Điều hướng trang"><a href="/">Trang chủ</a><a href="/#blog">Blog</a></nav></div>
+  <h1>Reliability-aware Adaptive Fusion</h1>
+  <p class="byline">Lê Tuân · Cập nhật 24/11/2026 · Đọc 6 phút</p>
+  <nav class="series" aria-label="Loạt bài x2-Fusion"><span>Loạt bài x2-Fusion (CVPR 2026):</span> <a href="x2_fusion_vi.html">1. Event Edge Space</a> · <span aria-current="page">2. Reliability-aware Adaptive Fusion</span> · <a href="x2_fusion_ccl_vi.html">3. Cross-dimension Contrast Learning</a></nav>
+</header>
+<nav class="toc" aria-label="Mục lục"><a href="#intro">Mở đầu</a><a href="#dau-vao">1. Đầu vào</a><a href="#toan-cuc">2. Tin cậy toàn cục</a><a href="#cuc-bo">3. Tin cậy cục bộ</a><a href="#tron">4. Trộn</a><a href="#vi-du">5. Ví dụ bằng số</a><a href="#cross-attn">6. Cross-attention</a><a href="#chua-ro">7. Điểm chưa rõ</a><a href="#key-takeaways">Key takeaways</a><a href="#refs">Tài liệu tham khảo</a></nav>
+<main id="main">
+
+<section id="intro">
+  <h2>Mở đầu</h2>
+  <p>Bài trước giải thích <a href="x2_fusion_vi.html">Event Edge Space</a>: x2-Fusion <a class="cite" href="#ref1">[1]</a> đưa ảnh, LiDAR và event về cùng kích thước, cùng vị trí và cùng ngôn ngữ cạnh. Bài này giải thích bước tiếp theo: <b>trộn ba vector đó thành một</b>.</p>
+  <p>Câu hỏi chính là: <b>tại vị trí này, nên tin cảm biến nào hơn?</b> Ban đêm, ảnh kém tin cậy. Ở vùng xa, LiDAR thưa và kém tin cậy. Module <b>Reliability-aware Adaptive Fusion</b> trả lời câu hỏi đó ở hai mức: toàn cục và cục bộ. Sau đó, một khối cross-attention tinh chỉnh kết quả.</p>
+  <p>Module có hai bản giống nhau: một cho nhánh 2D (optical flow) và một cho nhánh 3D (scene flow). Các tác giả gọi đây là bộ giải mã đối xứng hai nhánh.</p>
+
+  <figure class="wide scrollx">
+  <svg viewBox="0 0 1060 450" role="img" aria-label="Sơ đồ module Reliability-aware Adaptive Fusion" style="min-width:780px">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--fg)"/></marker>
+      <marker id="ahf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--fu)"/></marker>
+    </defs>
+
+    <!-- column headers -->
+    <g class="xs mu b" text-anchor="middle">
+      <text x="75" y="18">ĐẦU VÀO</text>
+      <text x="330" y="18">TÍNH TRỌNG SỐ</text>
+      <text x="610" y="18">TRỘN</text>
+      <text x="825" y="18">TINH CHỈNH</text>
+      <text x="995" y="18">ĐẦU RA</text>
+    </g>
+
+    <!-- inputs: centers y = 84, 214, 344 -->
+    <rect x="20" y="60" width="110" height="48" rx="8" class="bimg"/><text x="75" y="89" text-anchor="middle" class="md">Z^I (ảnh)</text>
+    <rect x="20" y="190" width="110" height="48" rx="8" class="bev"/><text x="75" y="219" text-anchor="middle" class="md">Z^E (event)</text>
+    <rect x="20" y="320" width="110" height="48" rx="8" class="blid"/><text x="75" y="349" text-anchor="middle" class="md">Z^L (LiDAR)</text>
+
+    <!-- bus to weight blocks -->
+    <g class="ln">
+      <path d="M130 84H160"/><path d="M130 214H160"/><path d="M130 344H160"/>
+      <path d="M160 84V344"/>
+      <path d="M160 115H188" marker-end="url(#ah)"/>
+      <path d="M160 325H188" marker-end="url(#ah)"/>
+    </g>
+
+    <!-- ① global: x 190..470, y 30..200 -->
+    <rect x="190" y="30" width="280" height="170" rx="12" class="bx"/>
+    <text x="330" y="54" text-anchor="middle" class="md b">① Trọng số toàn cục ω_m</text>
+    <text x="330" y="72" text-anchor="middle" class="xs mu">Ẑ = [Z^m, Z^E] · so mỗi cảm biến với event</text>
+    <rect x="205" y="86" width="120" height="58" rx="8" class="bs"/>
+    <text x="265" y="106" text-anchor="middle" class="sm b">T · thời gian</text>
+    <text x="265" y="123" text-anchor="middle" class="xs">Conv → Δt</text>
+    <text x="265" y="137" text-anchor="middle" class="xs">→ Linear → σ</text>
+    <rect x="335" y="86" width="120" height="58" rx="8" class="bs"/>
+    <text x="395" y="106" text-anchor="middle" class="sm b">S · không gian</text>
+    <text x="395" y="123" text-anchor="middle" class="xs">Dilated conv</text>
+    <text x="395" y="137" text-anchor="middle" class="xs">→ ‖∇‖₂</text>
+    <text x="330" y="166" text-anchor="middle" class="sm">(T ⊗ S) Ẑ → softmax theo m</text>
+    <text x="330" y="188" text-anchor="middle" class="sm b" style="fill:var(--fu)">1 số cho mỗi cảm biến</text>
+
+    <!-- ② local: x 190..470, y 240..410 -->
+    <rect x="190" y="240" width="280" height="170" rx="12" class="bx"/>
+    <text x="330" y="264" text-anchor="middle" class="md b">② Trọng số cục bộ A_m(x)</text>
+    <text x="330" y="282" text-anchor="middle" class="xs mu">Z̃ = [Z^I, Z^L, Z^E] · thay đổi theo vị trí x</text>
+    <rect x="203" y="296" width="80" height="58" rx="8" class="bs"/>
+    <text x="243" y="316" text-anchor="middle" class="sm b">H</text><text x="243" y="333" text-anchor="middle" class="xs">lọc thông</text><text x="243" y="346" text-anchor="middle" class="xs">cao</text>
+    <rect x="290" y="296" width="80" height="58" rx="8" class="bs"/>
+    <text x="330" y="316" text-anchor="middle" class="sm b">P</text><text x="330" y="333" text-anchor="middle" class="xs">average</text><text x="330" y="346" text-anchor="middle" class="xs">pooling</text>
+    <rect x="377" y="296" width="80" height="58" rx="8" class="bs"/>
+    <text x="417" y="316" text-anchor="middle" class="sm b">G</text><text x="417" y="333" text-anchor="middle" class="xs">group</text><text x="417" y="346" text-anchor="middle" class="xs">1×1 conv</text>
+    <text x="330" y="376" text-anchor="middle" class="sm">(H ⊕ P ⊕ G) Z̃ → softmax theo m</text>
+    <text x="330" y="398" text-anchor="middle" class="sm b" style="fill:var(--fu)">1 bản đồ cho mỗi cảm biến</text>
+
+    <!-- weights to fuse -->
+    <g class="ln">
+      <path d="M470 115H500V195H528" marker-end="url(#ah)"/>
+      <path d="M470 325H500V245H528" marker-end="url(#ah)"/>
+    </g>
+    <text x="506" y="108" class="sm b" style="fill:var(--fu)">ω_m</text>
+    <text x="506" y="342" class="sm b" style="fill:var(--fu)">A_m(x)</text>
+
+    <!-- ③ fuse: x 530..690, y 155..285 -->
+    <rect x="530" y="155" width="160" height="130" rx="12" class="bfu"/>
+    <text x="610" y="180" text-anchor="middle" class="md b">③ Trộn</text>
+    <text x="610" y="203" text-anchor="middle" class="xs">w_m(x) = ω_m·A_m(x)</text>
+    <text x="610" y="219" text-anchor="middle" class="xs">÷ Σ_n ω_n·A_n(x)</text>
+    <text x="610" y="245" text-anchor="middle" class="xs">F_fused(x) =</text>
+    <text x="610" y="261" text-anchor="middle" class="xs">Σ_m w_m(x)·Z_m(x)</text>
+    <text x="610" y="278" text-anchor="middle" class="xs mu">tổng trọng số = 1</text>
+
+    <!-- inputs also go to fuse (bottom bus) -->
+    <path class="ln" d="M75 368V432H610V287" marker-end="url(#ah)" stroke-dasharray="4 3"/>
+    <text x="340" y="446" text-anchor="middle" class="xs mu">Z^I, Z^L, Z^E được nhân với trọng số và cộng lại</text>
+
+    <!-- ④ cross-attention: x 750..900, y 120..320 -->
+    <rect x="750" y="120" width="150" height="200" rx="12" class="bx"/>
+    <text x="825" y="144" text-anchor="middle" class="md b">④ Cross-attention</text>
+    <rect x="762" y="158" width="126" height="30" rx="6" class="bs"/><text x="825" y="178" text-anchor="middle" class="xs">Q = W_q·F_fused</text>
+    <rect x="762" y="196" width="126" height="30" rx="6" class="bs"/><text x="825" y="216" text-anchor="middle" class="xs">K = W_k·F_aux</text>
+    <rect x="762" y="234" width="126" height="30" rx="6" class="bs"/><text x="825" y="254" text-anchor="middle" class="xs">V = W_v·F_aux</text>
+    <text x="825" y="284" text-anchor="middle" class="xs">softmax(QKᵀ/√d)·V</text>
+    <text x="825" y="303" text-anchor="middle" class="xs">→ MLP</text>
+
+    <!-- fuse to Q -->
+    <path class="ln" d="M690 220H720V173H760" marker-end="url(#ah)"/>
+    <text x="720" y="163" text-anchor="middle" class="xs mu">F_fused</text>
+
+    <!-- aux: x 750..900, y 350..420 -->
+    <rect x="750" y="350" width="150" height="70" rx="10" class="bs"/>
+    <text x="825" y="370" text-anchor="middle" class="sm b">F_aux</text>
+    <text x="825" y="389" text-anchor="middle" class="xs mono">2D: [Z^L,2D, Z^E]</text>
+    <text x="825" y="406" text-anchor="middle" class="xs mono">3D: [Z^I,3D, Z^E,3D]</text>
+    <g class="ln">
+      <path d="M750 385H736V211H760" marker-end="url(#ah)"/>
+      <path d="M736 249H760" marker-end="url(#ah)"/>
+    </g>
+
+    <!-- residual + sum -->
+    <path class="lnfu" d="M610 155V96H925V206" marker-end="url(#ahf)"/>
+    <text x="767" y="89" text-anchor="middle" class="xs" style="fill:var(--fu)">residual: cộng lại F_fused</text>
+    <path class="ln" d="M900 220H911" marker-end="url(#ah)"/>
+    <circle cx="925" cy="220" r="12" class="bx"/><text x="925" y="225" text-anchor="middle" class="md b">+</text>
+    <path class="ln" d="M937 220H948" marker-end="url(#ah)"/>
+
+    <!-- output: x 950..1040 -->
+    <rect x="950" y="190" width="90" height="60" rx="10" class="bfu"/>
+    <text x="995" y="214" text-anchor="middle" class="md b">F_out</text>
+    <text x="995" y="232" text-anchor="middle" class="xs">2D: H×W×C</text>
+    <text x="995" y="245" text-anchor="middle" class="xs">3D: N×C</text>
+  </svg>
+  <figcaption>Hình 1. Module Reliability-aware Adaptive Fusion, vẽ lại theo §3.2 và Hình 4 của <a class="cite" href="#ref1">[1]</a>. ① và ② tính trọng số. ③ cộng ba vector theo trọng số. ④ cross-attention tinh chỉnh, rồi cộng lại F_fused qua đường residual (nét đứt tím).</figcaption>
+  </figure>
+</section>
+
+<section id="dau-vao">
+  <h2><span class="num">1.</span>Đầu vào: ba vector cùng ngôn ngữ</h2>
+  <p>Tại mỗi vị trí \(x\) có ba vector: \(Z^I(x)\), \(Z^L(x)\), \(Z^E(x)\). Ở nhánh 2D, \(x\) là một pixel. Ở nhánh 3D, \(x\) là một điểm LiDAR. Ba vector có cùng \(C\) số và cùng ý nghĩa, nhờ Event Edge Space.</p>
+  <p>Vì vậy, có thể <b>cộng trực tiếp</b> ba vector. Các phương pháp cũ không làm được việc này. Chúng cần một module riêng cho mỗi cặp cảm biến. Ở đây, vấn đề duy nhất còn lại là chọn <b>trọng số</b> cho mỗi cảm biến.</p>
+  <p>Module dùng hai luồng nhẹ để tính trọng số:</p>
+  <ul class="tight">
+    <li><b>Luồng chuyển động</b> gom đặc trưng theo <b>thời gian</b>. Nó đo xem chuyển động có nhất quán trên toàn cảnh không.</li>
+    <li><b>Luồng không gian</b> gom đặc trưng trong <b>vùng lân cận</b>. Nó đo xem cấu trúc cục bộ có khớp nhau không.</li>
+  </ul>
+</section>
+
+<section id="toan-cuc">
+  <h2><span class="num">2.</span>Độ tin cậy toàn cục \(\omega_m\)</h2>
+  <p><b>Ý tưởng:</b> event có độ phân giải thời gian cao và dải động cao. Event vẫn hoạt động khi ảnh quá tối hoặc quá sáng. Vì vậy, event là <b>thước đo chuyển động</b> tốt. Cảm biến nào cho chuyển động khớp với event thì đáng tin hơn.</p>
+  <p>Với mỗi cảm biến \(m\in\{I,L\}\), module ghép đặc trưng của nó với event: \(\hat Z=[Z^m,Z^E]\). Sau đó, module áp dụng hai phép biến đổi:</p>
+  <div class="formula">$$\mathcal{T}(\hat Z)=\sigma\Big(\mathbb{L}\big(\Delta_t(\text{Conv}(\hat Z))\big)\Big),\qquad \mathcal{S}(\hat Z)=\big\|\nabla\big(\text{DConv}(\hat Z)\big)\big\|_2$$</div>
+  <div class="formula">$$\omega_m=\text{softmax}_m\big((\mathcal{T}\otimes\mathcal{S})\,\hat Z\big)$$</div>
+  <h3 class="sub">Đọc công thức từ trong ra ngoài</h3>
+  <ol class="steps">
+    <li><b>\(\text{Conv}(\hat Z)\)</b>: một lớp tích chập trộn đặc trưng cảm biến với đặc trưng event.</li>
+    <li><b>\(\Delta_t\)</b>: lấy hiệu giữa hai thời điểm t₁ và t₂. Kết quả cho biết đặc trưng <b>thay đổi</b> bao nhiêu, tức chuyển động.</li>
+    <li><b>\(\mathbb{L}\) rồi \(\sigma\)</b>: một lớp tuyến tính, rồi sigmoid. Kết quả \(\mathcal{T}\) nằm trong khoảng 0 đến 1. Nó mô tả mức nhất quán về chuyển động.</li>
+    <li><b>\(\text{DConv}\)</b>: tích chập giãn (dilated). Nó nhìn một vùng rộng mà không tốn nhiều tham số.</li>
+    <li><b>\(\|\nabla\cdot\|_2\)</b>: độ lớn gradient không gian. Giá trị lớn ở nơi có cạnh và cấu trúc. Kết quả \(\mathcal{S}\) mô tả cấu trúc không gian.</li>
+    <li><b>\(\mathcal{T}\otimes\mathcal{S}\)</b>: kết hợp hai thông tin thời gian và không gian.</li>
+    <li><b>\(\text{softmax}_m\)</b>: chuẩn hóa giữa các cảm biến. Tổng các \(\omega_m\) bằng 1.</li>
+  </ol>
+  <p>Kết quả \(\omega_m\) là <b>một số cho mỗi cảm biến</b>. Ví dụ, trong một cảnh ban đêm, \(\omega_I\) nhỏ vì chuyển động thấy trong ảnh không khớp với event.</p>
+</section>
+
+<section id="cuc-bo">
+  <h2><span class="num">3.</span>Độ tin cậy cục bộ \(A_m(x)\)</h2>
+  <p>Một số cho cả cảnh là chưa đủ. Một cảm biến có thể tốt ở vùng này nhưng kém ở vùng khác. Ví dụ: ảnh chỉ bị cháy sáng ở vùng gần đèn đường. LiDAR chỉ thưa ở vùng xa. Vì vậy, module tính thêm một <b>bản đồ</b> trọng số theo vị trí. Đầu vào là cả ba đặc trưng \(\tilde Z=[Z^I,Z^L,Z^E]\).</p>
+  <div class="formula">$$A_m(x)=\text{softmax}\big((\mathcal{H}\oplus\mathcal{P}\oplus\mathcal{G})\,\tilde Z\big)_m$$</div>
+  <div class="scrollx"><table class="ex">
+    <thead><tr><th>Ký hiệu</th><th>Phép toán</th><th>Nó nhìn thấy gì</th></tr></thead>
+    <tbody>
+      <tr><td>\(\mathcal{H}\)</td><td>Lọc thông cao (HPF)</td><td>Chi tiết nhỏ và cạnh sắc. Cảm biến bị mờ hoặc cháy sáng có ít chi tiết.</td></tr>
+      <tr><td>\(\mathcal{P}\)</td><td>Average pooling</td><td>Bối cảnh của vùng xung quanh.</td></tr>
+      <tr><td>\(\mathcal{G}\)</td><td>Grouped 1×1 conv</td><td>Xử lý riêng từng cảm biến, với ít tham số.</td></tr>
+      <tr><td>\(\oplus\)</td><td>Ghép</td><td>Gộp ba nguồn thông tin trên.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Softmax được tính <b>theo cảm biến tại mỗi vị trí</b>. Vì vậy, tại mỗi \(x\), ba giá trị \(A_I(x)\), \(A_L(x)\), \(A_E(x)\) có tổng bằng 1.</p>
+</section>
+
+<section id="tron">
+  <h2><span class="num">4.</span>Trộn: tổng có trọng số</h2>
+  <p>Module nhân độ tin cậy toàn cục với độ tin cậy cục bộ, rồi chuẩn hóa:</p>
+  <div class="formula">$$F_{\text{fused}}(x)=\sum_{m\in\mathcal{M}}\frac{\omega_m\,A_m(x)}{\sum_n\omega_n\,A_n(x)}\,Z_m(x)$$</div>
+  <ul class="tight">
+    <li><b>Tử số \(\omega_m A_m(x)\)</b>: cảm biến \(m\) đáng tin ở cả mức cảnh và mức vị trí thì có trọng số lớn.</li>
+    <li><b>Mẫu số</b>: chuẩn hóa để tổng ba trọng số tại \(x\) bằng 1.</li>
+    <li><b>Nhân với \(Z_m(x)\) rồi cộng</b>: phép trộn từng số một. Phép này chỉ có nghĩa vì ba vector đã cùng ngôn ngữ.</li>
+  </ul>
+  <p>Kết quả \(F_{\text{fused}}(x)\) vẫn là một vector \(C\) số. Ở nhánh 2D, cả bản đồ có kích thước \(H\times W\times C\). Ở nhánh 3D, nó có kích thước \(N\times C\).</p>
+</section>
+
+<section id="vi-du">
+  <h2><span class="num">5.</span>Ví dụ bằng số</h2>
+  <p>Giả sử một cảnh ban đêm. Độ tin cậy toàn cục là \(\omega_I=0.25\), \(\omega_L=0.35\), \(\omega_E=0.40\). Các số này chỉ để minh họa. Xét hai vị trí khác nhau:</p>
+  <div class="scrollx"><table class="ex">
+    <thead><tr><th>Vị trí</th><th>Cảm biến</th><th>\(\omega_m\)</th><th>\(A_m(x)\)</th><th>\(\omega_m A_m\)</th><th>Trọng số cuối</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="3"><b>A</b>: gần đèn đường<br><span class="small">ảnh bị cháy sáng</span></td><td>Ảnh</td><td class="num">0.25</td><td class="num">0.10</td><td class="num">0.025</td><td class="num">0.07</td></tr>
+      <tr><td>LiDAR</td><td class="num">0.35</td><td class="num">0.50</td><td class="num">0.175</td><td class="num hi">0.49</td></tr>
+      <tr><td>Event</td><td class="num">0.40</td><td class="num">0.40</td><td class="num">0.160</td><td class="num">0.44</td></tr>
+      <tr><td rowspan="3"><b>B</b>: mặt đường ở xa<br><span class="small">LiDAR rất thưa</span></td><td>Ảnh</td><td class="num">0.25</td><td class="num">0.50</td><td class="num">0.125</td><td class="num hi">0.40</td></tr>
+      <tr><td>LiDAR</td><td class="num">0.35</td><td class="num">0.20</td><td class="num">0.070</td><td class="num">0.22</td></tr>
+      <tr><td>Event</td><td class="num">0.40</td><td class="num">0.30</td><td class="num">0.120</td><td class="num">0.38</td></tr>
+    </tbody>
+  </table></div>
+  <p>Tại A, tổng \(\omega_m A_m\) là 0.36. Ảnh chỉ còn trọng số 0.025 / 0.36 ≈ 0.07. Mô hình gần như bỏ qua ảnh tại đây. Tại B, tổng là 0.315. Ảnh lại có trọng số cao nhất, ≈ 0.40, vì LiDAR thưa. Cùng một cảnh, cùng \(\omega_m\), nhưng trọng số cuối <b>thay đổi theo vị trí</b>. Đó là tác dụng của \(A_m(x)\).</p>
+</section>
+
+<section id="cross-attn">
+  <h2><span class="num">6.</span>Cross-attention: hỏi lại các cảm biến phụ</h2>
+  <p>Phép trộn ở bước 4 chỉ nhìn <b>cùng một vị trí</b> \(x\). Nhưng chuyển động làm vật dịch sang vị trí khác. Vì vậy, module thêm một khối cross-attention. Khối này cho phép mỗi vị trí “hỏi” các vị trí khác.</p>
+  <div class="formula">$$Q=W_q\,F_{\text{fused}},\qquad K=W_k\,F_{\text{aux}},\qquad V=W_v\,F_{\text{aux}}$$</div>
+  <div class="formula">$$\text{Attention}(Q,K,V)=\text{softmax}\!\left(\frac{QK^\top}{\sqrt d}\right)V,\qquad F^{2D/3D}_{\text{out}}=\text{MLP}\big(\text{Attention}(Q,K,V)\big)+F_{\text{fused}}$$</div>
+  <ul class="tight">
+    <li><b>Query \(Q\)</b>: lấy từ đặc trưng đã trộn. Nó đặt câu hỏi: “tôi cần thông tin gì?”</li>
+    <li><b>Key \(K\) và Value \(V\)</b>: lấy từ đặc trưng phụ \(F_{\text{aux}}\). \(K\) cho biết “tôi có gì”. \(V\) là nội dung được lấy ra.</li>
+    <li><b>\(\text{softmax}(QK^\top/\sqrt d)\)</b>: mức khớp giữa câu hỏi và từng vị trí. \(d\) là số chiều đặc trưng. Chia cho \(\sqrt d\) giữ cho softmax không quá nhọn.</li>
+    <li><b>MLP + residual</b>: tinh chỉnh kết quả, rồi cộng lại \(F_{\text{fused}}\). Nếu attention không có ích, mô hình vẫn giữ được \(F_{\text{fused}}\).</li>
+    <li>\(W_q, W_k, W_v\) là tích chập 1×1 ở nhánh 2D, và lớp tuyến tính ở nhánh 3D.</li>
+  </ul>
+  <h3 class="sub">Đặc trưng phụ \(F_{\text{aux}}\) khác nhau ở hai nhánh</h3>
+  <div class="scrollx"><table class="ex">
+    <thead><tr><th>Nhánh</th><th>Cảm biến “gốc”</th><th>\(F_{\text{aux}}\)</th></tr></thead>
+    <tbody>
+      <tr><td>2D (optical flow)</td><td>Ảnh (lưới pixel)</td><td class="mono">[Z^L,2D , Z^E]</td></tr>
+      <tr><td>3D (scene flow)</td><td>LiDAR (điểm)</td><td class="mono">[Z^I,3D , Z^E,3D]</td></tr>
+    </tbody>
+  </table></div>
+  <p>Ở mỗi nhánh, đặc trưng phụ là hai cảm biến <b>không phải</b> cảm biến gốc của nhánh đó, và event luôn có mặt. Đây là cách đọc của người viết. Bài gốc chỉ liệt kê \(F_{\text{aux}}\), không giải thích lý do chọn.</p>
+</section>
+
+<section id="chua-ro">
+  <h2><span class="num">7.</span>Điểm chưa rõ trong bài gốc</h2>
+  <div class="notebox">
+    <ul>
+      <li><b>\(\omega_m\) cho event.</b> Bài gốc định nghĩa \(\omega_m\) cho \(m\in\{I,L\}\). Nhưng công thức (10) cộng trên mọi cảm biến \(\mathcal{M}\), gồm cả event. Bài chính không nói \(\omega_E\) được tính thế nào. Ví dụ ở mục 5 tự giả định một giá trị cho \(\omega_E\).</li>
+      <li><b>Ký hiệu \(Z^M\) và \(\otimes\).</b> Bài viết \(\hat Z=[Z^M,Z^E]\). Có thể đây là \(Z^m\) của từng cảm biến. Phép \(\otimes\) có thể là nhân từng phần tử hoặc tích ngoài. Bài chính không nói rõ.</li>
+      <li><b>Thứ tự trong attention.</b> Bài viết \(V\cdot\text{softmax}(QK^\top/\sqrt d)\). Bài này viết theo dạng chuẩn \(\text{softmax}(QK^\top/\sqrt d)\,V\). Hai cách viết cho cùng ý nghĩa nếu ma trận được sắp xếp phù hợp.</li>
+      <li><b>Phạm vi attention.</b> Bài chính không nói mỗi query nhìn toàn bộ ảnh hay chỉ một cửa sổ. Với ảnh lớn, attention toàn cục rất tốn bộ nhớ.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="key-takeaways">
+  <h2>Key takeaways</h2>
+  <ul class="tight">
+    <li><b>Căn chỉnh trước làm trộn đơn giản.</b> Ba vector đã cùng ngôn ngữ, nên chỉ cần tổng có trọng số và một khối cross-attention. Không cần module riêng cho từng cặp cảm biến.</li>
+    <li><b>Hai mức độ tin cậy:</b>
+      <ul class="tight">
+        <li>\(\omega_m\) toàn cục: một số cho mỗi cảm biến, đo bằng mức khớp với chuyển động của event.</li>
+        <li>\(A_m(x)\) cục bộ: một bản đồ, thay đổi theo vị trí.</li>
+      </ul></li>
+    <li><b>Event là trọng tài.</b> Event có HDR và độ phân giải thời gian cao. Vì vậy, event là thước đo để chấm độ tin cậy của ảnh và LiDAR.</li>
+    <li><b>Cross-attention nhìn sang vị trí khác.</b> Query từ đặc trưng đã trộn. Key và value từ các cảm biến phụ. Residual giữ lại kết quả trộn.</li>
+    <li><b>Hai nhánh đối xứng.</b> Cùng một module cho nhánh 2D và nhánh 3D. Chỉ khác vị trí (pixel hay điểm) và đặc trưng phụ.</li>
+  </ul>
+</section>
+
+<nav class="series-pn" aria-label="Bài trước và bài sau"><a href="x2_fusion_vi.html">← 1. Event Edge Space</a><a href="x2_fusion_ccl_vi.html">3. Cross-dimension Contrast Learning →</a></nav>
+
+<section id="refs">
+  <h2>Tài liệu tham khảo</h2>
+  <ol class="refs">
+    <li id="ref1">R. Guo, C. Ruan, H. Wang, Z. Gong, J. Xu, X. Chen. <i>x2-Fusion: Cross-Modality and Cross-Dimension Flow Estimation in Event Edge Space</i>. Proc. IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2026, tr. 15145–15155. Công thức (7)–(13) từ §3.2 và Hình 4.</li>
+  </ol>
+</section>
+</main>
+
+<script>
+(function(){
+  var b=document.getElementById('themebtn'), r=document.documentElement, t=null;
+  try{t=localStorage.getItem('hkh-theme')}catch(e){}
+  if(t) r.setAttribute('data-theme',t);
+  b.onclick=function(){var dark=r.getAttribute('data-theme')==='dark'||(!r.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
+    var n=dark?'light':'dark'; r.setAttribute('data-theme',n); try{localStorage.setItem('hkh-theme',n)}catch(e){}};
+})();
+</script>
+</body>
+</html>
